@@ -1,11 +1,21 @@
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
+const http = require('http');
 
-app.get('/', (req, res) => {
-  res.send(`<h1>Server started in port ${port}</h1>`);
+const PORT = process.env.PORT || 8080;
+
+const server = http.createServer((req, res) => {
+  if (req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(`
+      <html>
+        <body>
+          <h1>Todo App</h1>
+          <p>The application is running inside Kubernetes!</p>
+        </body>
+      </html>
+    `);
+  }
 });
 
-app.listen(port, () => {
-  console.log(`Server started in port ${port}`);
+server.listen(PORT, () => {
+  console.log(`Server started in port ${PORT}`);
 });

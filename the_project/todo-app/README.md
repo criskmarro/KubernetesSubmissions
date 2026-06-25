@@ -69,3 +69,10 @@ kubectl logs <pod-name>
 ## Course
 
 This project was created for the Full Stack Open Kubernetes course exercises.
+
+## Features
+
+- Configurable PORT environment variable
+- Dockerized application
+- Kubernetes Deployment
+- HTTP endpoint available at /
