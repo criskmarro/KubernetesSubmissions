@@ -1,0 +1,16 @@
+{
+  "name": "log_output",
+  "version": "1.0.0",
+  "description": "This application generates a random hash and logs it.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^3.2.1"
+  }
+}
