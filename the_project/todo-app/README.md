@@ -1,78 +1,49 @@
-# Todo App
+# Exercise 1.8 - The Project: Step 5
 
-A simple Node.js web server deployed to Kubernetes as part of the Full Stack Open Kubernetes exercises.
+## Description
 
-## Features
+This exercise updates the Todo application to use a Kubernetes Ingress instead of a NodePort Service for external access.
 
-* Node.js HTTP server
-* Configurable port through the `PORT` environment variable
-* Dockerized application
-* Kubernetes deployment using a Deployment manifest
+The application is deployed on Kubernetes using:
 
-## Running locally
+* Deployment
+* ClusterIP Service
+* Ingress
 
-Install dependencies:
+## Changes
 
-```bash
-npm install
-```
+* Replaced the NodePort Service with a ClusterIP Service.
+* Added an Ingress resource to expose the application externally.
+* Updated the application to use Koa.
+* Configured the application to return the Todo App page through the Ingress.
 
-Start the application:
-
-```bash
-npm start
-```
-
-The server will start on the port specified by the `PORT` environment variable.
-
-Example:
+## Build the Docker Image
 
 ```bash
-PORT=8080 npm start
+docker build -t todo-app:v2 .
 ```
 
-## Docker
-
-Build the image:
+## Import the Image into k3d
 
 ```bash
-docker build -t todo-app:v1 .
+k3d image import todo-app:v2 -c k3s-default
 ```
 
-Run the container:
+## Deploy
 
 ```bash
-docker run -p 8080:8080 -e PORT=8080 todo-app:v1
+kubectl apply -f manifests
 ```
 
-## Kubernetes
-
-Deploy the application:
-
-```bash
-kubectl apply -f manifests/deployment.yaml
-```
-
-Check the deployment:
+## Verify
 
 ```bash
 kubectl get deployments
 kubectl get pods
+kubectl get svc
+kubectl get ingress
 ```
 
-View logs:
+## Access
 
-```bash
-kubectl logs <pod-name>
-```
-
-## Course
-
-This project was created for the Full Stack Open Kubernetes course exercises.
-
-## Features
-
-- Configurable PORT environment variable
-- Dockerized application
-- Kubernetes Deployment
-- HTTP endpoint available at /
+After the Ingress is created, open the application using the port mapped to the k3d load balancer (for example, `http://localhost:8081`).
