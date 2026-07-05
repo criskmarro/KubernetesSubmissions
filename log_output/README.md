@@ -1,47 +1,31 @@
-# Exercise 1.10 - Even More Services
+# Exercise 1.11 - Persisting Data
 
 ## Description
 
-This exercise refactors the **Log Output** application by splitting it into two containers running inside the same Kubernetes Pod.
+This exercise extends the previous applications by introducing persistent storage shared between the **Ping Pong** and **Log Output** applications.
 
-The containers communicate through a shared `emptyDir` volume.
+A PersistentVolume (PV) and PersistentVolumeClaim (PVC) were created so both applications can access the same storage.
 
 ## Architecture
 
-The Pod contains two containers:
+- **Ping Pong**
+  - Receives requests at `/pingpong`
+  - Increments an in-memory counter
+  - Stores the current counter value in a shared file (`pingpong.txt`)
 
-### Log Writer
+- **Log Output**
+  - Consists of two containers in a single Pod:
+    - **Writer**
+      - Generates a random string on startup.
+      - Writes the current timestamp and random string to `output.txt` every 5 seconds.
+    - **Reader**
+      - Reads both `output.txt` and `pingpong.txt`.
+      - Displays the latest timestamp, random string and current Ping/Pong counter.
 
-* Generates a random string when the container starts.
-* Writes a new log entry every 5 seconds.
-* Stores the log entries in a shared file.
+## Persistent Storage
 
-### Log Reader
+The applications share a PersistentVolume mounted at:
 
-* Reads the shared log file.
-* Exposes the file contents through an HTTP endpoint.
-
-## Shared Volume
-
-Both containers mount the same Kubernetes `emptyDir` volume.
-
-```text
-                +-----------------------+
-                |      Kubernetes Pod   |
-                |                       |
-                |  +-----------------+  |
-                |  |   Log Writer    |  |
-                |  | writes output   |  |
-                |  +--------+--------+  |
-                |           |           |
-                |     emptyDir Volume   |
-                |           |           |
-                |  +--------v--------+  |
-                |  |   Log Reader    |  |
-                |  | serves output   |  |
-                |  +-----------------+  |
-                +-----------------------+
-```
 
 ## Kubernetes Resources
 

@@ -1,5 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: ping-pong-deployment
 
@@ -16,14 +17,21 @@ spec:
         app: ping-pong
 
     spec:
+
+      volumes:
+        - name: shared-storage
+          persistentVolumeClaim:
+            claimName: ping-log-claim
+
       containers:
+        - name: ping-pong
 
-      - name: ping-pong
+          image: ping-pong:v2
+          imagePullPolicy: Never
 
-        image: ping-pong:v1
+          ports:
+            - containerPort: 3001
 
-        imagePullPolicy: Never
-
-        ports:
-
-        - containerPort: 3001
+          volumeMounts:
+            - name: shared-storage
+              mountPath: /usr/src/app/files
