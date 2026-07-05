@@ -1,33 +1,71 @@
-# Exercise 1.7 - External Access with Ingress
+# Exercise 1.10 - Even More Services
 
 ## Description
 
-This exercise extends the **Log Output** application by exposing its current status through an HTTP endpoint and making it accessible externally using a Kubernetes Ingress.
+This exercise refactors the **Log Output** application by splitting it into two containers running inside the same Kubernetes Pod.
 
-The application:
+The containers communicate through a shared `emptyDir` volume.
 
-* Generates a random string when it starts.
-* Logs the current timestamp and the random string every 5 seconds.
-* Returns the current timestamp and the startup random string through an HTTP endpoint.
+## Architecture
+
+The Pod contains two containers:
+
+### Log Writer
+
+* Generates a random string when the container starts.
+* Writes a new log entry every 5 seconds.
+* Stores the log entries in a shared file.
+
+### Log Reader
+
+* Reads the shared log file.
+* Exposes the file contents through an HTTP endpoint.
+
+## Shared Volume
+
+Both containers mount the same Kubernetes `emptyDir` volume.
+
+```text
+                +-----------------------+
+                |      Kubernetes Pod   |
+                |                       |
+                |  +-----------------+  |
+                |  |   Log Writer    |  |
+                |  | writes output   |  |
+                |  +--------+--------+  |
+                |           |           |
+                |     emptyDir Volume   |
+                |           |           |
+                |  +--------v--------+  |
+                |  |   Log Reader    |  |
+                |  | serves output   |  |
+                |  +-----------------+  |
+                +-----------------------+
+```
 
 ## Kubernetes Resources
 
-The application is deployed using:
+The application uses:
 
 * Deployment
 * ClusterIP Service
 * Ingress
+* emptyDir Volume
 
-## Build the Docker Image
+## Build Docker Images
 
 ```bash
-docker build -t log-output:1.7 .
+docker build -t log-output-writer:v1 ./writer
+
+docker build -t log-output-reader:v1 ./reader
 ```
 
-## Import the Image into k3d
+## Import Images into k3d
 
 ```bash
-k3d image import log-output:1.7 -c log-output
+k3d image import log-output-writer:v1 -c k3s-default
+
+k3d image import log-output-reader:v1 -c k3s-default
 ```
 
 ## Deploy
@@ -40,17 +78,20 @@ kubectl apply -f manifests
 
 ```bash
 kubectl get deployments
+
 kubectl get pods
+
 kubectl get svc
+
 kubectl get ingress
 ```
 
 ## Access
 
-Once the Ingress is running, open:
+Open the application through the configured Ingress, for example:
 
-```
-http://localhost:8082
+```text
+http://localhost:8081/
 ```
 
-The application returns the current timestamp together with the random string generated when the application started.
+The response displays the contents of the shared log file, which is continuously updated by the Log Writer container.
