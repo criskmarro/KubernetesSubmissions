@@ -1,20 +1,27 @@
-# Exercise 1.12 - The Project, Step 6
+# Exercise 1.13 - The Project, Step 7
 
 ## Description
 
-This exercise extends the Todo application by adding support for displaying a random image from Lorem Picsum.
+This exercise extends the Todo application by adding the first user interface elements required for managing todos.
 
-Instead of downloading a new image on every request, the application caches the downloaded image for 10 minutes using a PersistentVolume. This allows the image to survive Pod restarts while reducing unnecessary requests to the external API.
+The application now includes a form where users can enter new tasks, a send button, and a list displaying existing todos. At this stage, todos are stored only in memory and are intended as a visual demonstration before implementing persistent storage in future exercises.
+
+The random image functionality introduced in Exercise 1.12 remains unchanged and continues using a PersistentVolume for caching.
+
+---
 
 ## Features
 
-- Displays a random image from https://picsum.photos/1200.
-- Downloads a new image only if:
-  - No cached image exists.
-  - The cached image is older than 10 minutes.
-- Stores both the image and its metadata inside a PersistentVolume.
-- Serves the cached image through the application.
-- Maintains a clean separation between image management logic and HTTP routes.
+- Displays a random image from Lorem Picsum.
+- Caches the image for 10 minutes using a PersistentVolume.
+- Responsive user interface.
+- Input field with a maximum length of **140 characters**.
+- Send button for submitting new todos.
+- Dynamic todo list displayed below the form.
+- Modern card-based UI with improved styling.
+- Todos are temporarily stored in application memory.
+
+---
 
 ## Project Structure
 
@@ -38,9 +45,43 @@ the_project/
 │   └── package-lock.json
 ```
 
-## Persistent Storage
+---
 
-The application mounts a PersistentVolume at:
+## User Interface
+
+The application now displays:
+
+- Centered page title.
+- Cached random image.
+- Todo input form.
+- Send button.
+- Todo list inside a styled card.
+
+Example layout:
+
+```
+TODO APP
+
+[ Random Image ]
+
++--------------------------------------------+
+| Enter a new todo (max 140 characters) |Send|
++--------------------------------------------+
+
+Todos
+
+┌──────────────────────────────────────────┐
+│ Learn Kubernetes                         │
+│ Finish Exercise 1.13                     │
+│ Deploy Todo App                          │
+└──────────────────────────────────────────┘
+```
+
+---
+
+## Image Cache
+
+Images are stored inside the mounted PersistentVolume:
 
 ```
 /usr/src/app/files
@@ -51,15 +92,9 @@ Stored files:
 - image.jpg
 - metadata.json
 
-The metadata file contains the timestamp of the last downloaded image, allowing the application to determine when a new image should be fetched.
+The cached image is refreshed every 10 minutes.
 
-## Cache Logic
-
-1. User requests the Todo application.
-2. The application checks whether an image already exists.
-3. If no image exists, a new one is downloaded.
-4. If the cached image is older than 10 minutes, a new image replaces it.
-5. Otherwise, the cached image is served directly from the PersistentVolume.
+---
 
 ## Technologies
 
@@ -72,6 +107,8 @@ The metadata file contains the timestamp of the last downloaded image, allowing 
 - PersistentVolume
 - PersistentVolumeClaim
 - Ingress
+
+---
 
 ## Result
 
