@@ -1,13 +1,11 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm ci
+RUN npm install
 
 COPY . .
 
-EXPOSE 8080
-
-CMD ["npm", "start"]
+CMD ["npm","start"]

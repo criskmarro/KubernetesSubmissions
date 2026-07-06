@@ -12,12 +12,16 @@ spec:
       labels:
         app: todo-app
     spec:
+      volumes:
+        - name: image-storage
+          persistentVolumeClaim:
+            claimName: todo-images-claim
       containers:
-        - name: todo-app-container
-          image: todo-app:v2
+        - name: todo-app
+          image: todo-app:v3
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
-          env:
-            - name: PORT
-              value: "8080"
+          volumeMounts:
+            - name: image-storage
+              mountPath: /usr/src/app/files
