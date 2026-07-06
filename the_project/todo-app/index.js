@@ -1,79 +1,238 @@
 const express = require('express');
-
 const { ensureImage, imagePath } = require('./imageManager');
 
 const app = express();
 
 const PORT = process.env.PORT || 8080;
 
+app.use(express.urlencoded({ extended: true }));
+
+// Hardcoded todos
+const todos = [
+    "Learn Kubernetes",
+    "Finish Exercise 1.13",
+    "Deploy Todo App"
+];
+
 app.get('/', async (req, res) => {
 
     await ensureImage();
 
+    const todoList = todos
+        .map(todo => `<li>${todo}</li>`)
+        .join('');
+
     res.send(`
-    <!DOCTYPE html>
+<!DOCTYPE html>
 
-    <html>
+<html>
 
-    <head>
+<head>
 
-        <title>Todo App</title>
+<meta charset="UTF-8">
 
-        <style>
+<title>Todo App</title>
 
-            body{
+<style>
 
-                font-family: Arial;
+body{
 
-                text-align:center;
+    font-family: Arial, Helvetica, sans-serif;
+    background:#f4f6f8;
+    text-align:center;
+    margin:0;
+    padding:40px 0 80px 0;
 
-                background:#f5f5f5;
+}
 
-                margin-top:40px;
+.container{
 
-            }
+    width:900px;
+    max-width:95%;
+    margin:auto;
 
-            img{
+}
 
-                width:700px;
+h1{
 
-                max-width:90%;
+    font-size:48px;
+    margin-bottom:30px;
 
-                border-radius:12px;
+}
 
-                box-shadow:0 0 20px rgba(0,0,0,.25);
+img{
 
-            }
+    width:700px;
+    max-width:100%;
+    border-radius:12px;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+    margin-bottom:35px;
 
-            h1{
+}
 
-                font-size:48px;
+form{
 
-            }
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    margin-bottom:40px;
 
-            p{
+}
 
-                font-size:22px;
+input{
 
-            }
+    flex:1;
+    max-width:550px;
+    padding:14px;
+    border:2px solid #4CAF50;
+    border-radius:8px;
+    font-size:16px;
+    outline:none;
 
-        </style>
+}
 
-    </head>
+input:focus{
 
-    <body>
+    box-shadow:0 0 8px rgba(76,175,80,.35);
 
-        <h1>TODO APP</h1>
+}
 
-        <img src="/image">
+button{
 
-        <p>DevOps with Kubernetes 2026</p>
+    padding:14px 24px;
+    background:#4CAF50;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+    transition:.2s;
 
-    </body>
+}
 
-    </html>
-    `);
+button:hover{
 
+    background:#3d9140;
+    transform:translateY(-1px);
+
+}
+
+h2{
+
+    margin-top:20px;
+    margin-bottom:20px;
+
+}
+
+.todo-container{
+
+    width:650px;
+    max-width:100%;
+    margin:auto;
+    background:white;
+    border-radius:12px;
+    box-shadow:0 6px 16px rgba(0,0,0,.12);
+    padding:20px;
+
+}
+
+ul{
+
+    list-style:none;
+    padding:0;
+    margin:0;
+
+}
+
+li{
+
+    background:#fafafa;
+    border-left:6px solid #4CAF50;
+    border-radius:6px;
+    padding:15px 18px;
+    margin-bottom:12px;
+    text-align:left;
+    font-size:18px;
+    transition:.2s;
+
+}
+
+li:hover{
+
+    background:#eef8ee;
+    transform:translateX(4px);
+
+}
+
+.footer-space{
+
+    height:80px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>TODO APP</h1>
+
+<img src="/image">
+
+<form action="/todo" method="POST">
+
+<input
+type="text"
+name="todo"
+maxlength="140"
+placeholder="Enter a new todo (max 140 characters)"
+required>
+
+<button type="submit">
+
+Send
+
+</button>
+
+</form>
+
+<h2>Todos</h2>
+
+<div class="todo-container">
+
+    <ul>
+
+        ${todoList}
+
+    </ul>
+
+</div>
+
+<div class="footer-space"></div>
+
+</div>
+
+</body>
+
+</html>
+`);
+});
+
+app.post('/todo', (req, res) => {
+
+    const todo = req.body.todo;
+
+    if (todo && todo.length <= 140) {
+
+        todos.push(todo);
+
+    }
+
+    res.redirect('/');
 });
 
 app.get('/image', async (req, res) => {
