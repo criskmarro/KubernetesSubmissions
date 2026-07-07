@@ -17,21 +17,9 @@ spec:
         app: ping-pong
 
     spec:
-
-      volumes:
-        - name: shared-storage
-          persistentVolumeClaim:
-            claimName: ping-log-claim
-
       containers:
-        - name: ping-pong
-
-          image: ping-pong:v2
-          imagePullPolicy: Never
-
-          ports:
-            - containerPort: 3001
-
-          volumeMounts:
-            - name: shared-storage
-              mountPath: /usr/src/app/files
+      - name: ping-pong
+        image: ping-pong:v2
+        imagePullPolicy: Never
+        ports:
+          - containerPort: 3001

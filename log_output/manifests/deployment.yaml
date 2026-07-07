@@ -18,21 +18,18 @@ spec:
     spec:
       volumes:
         - name: shared-log
-          persistentVolumeClaim:
-            claimName: ping-log-claim
+          emptyDir: {}
 
       containers:
-        - name: log-writer
+        - name: writer
           image: log-output-writer:v2
-          imagePullPolicy: Never
 
           volumeMounts:
             - name: shared-log
               mountPath: /usr/src/app/files
 
-        - name: log-reader
+        - name: reader
           image: log-output-reader:v2
-          imagePullPolicy: Never
 
           ports:
             - containerPort: 3000

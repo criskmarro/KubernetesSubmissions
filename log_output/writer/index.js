@@ -4,34 +4,18 @@ const path = require('path');
 const directory = path.join('/', 'usr', 'src', 'app', 'files');
 const filePath = path.join(directory, 'output.txt');
 
-fs.mkdirSync(directory, { recursive: true });
-
 const randomString = Math.random().toString(36).substring(2, 8);
 
-console.log(`Started with ${randomString}`);
+fs.mkdirSync(directory, { recursive: true });
 
 const writeLog = () => {
-
     const timestamp = new Date().toISOString();
-
-    const line = `${timestamp}: ${randomString}`;
+    const line = `${timestamp}: ${randomString}\n`;
 
     fs.writeFile(filePath, line, err => {
-
-        if (err) {
-
-            console.error(err);
-
-            return;
-
-        }
-
-        console.log(line);
-
+        if (err) console.error(err);
     });
-
 };
 
 writeLog();
-
 setInterval(writeLog, 5000);

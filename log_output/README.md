@@ -1,81 +1,80 @@
-# Exercise 1.11 - Persisting Data
+# Exercise 2.1 - Connecting Pods
 
-## Description
+This exercise updates the communication between the **Log Output** application and the **Ping-Pong** application.
 
-This exercise extends the previous applications by introducing persistent storage shared between the **Ping Pong** and **Log Output** applications.
+## Objective
 
-A PersistentVolume (PV) and PersistentVolumeClaim (PVC) were created so both applications can access the same storage.
+Replace the shared Persistent Volume used in Exercise 1.11 with direct HTTP communication between the applications.
 
-## Architecture
+The Log Output application now retrieves the current ping counter by sending an HTTP request to the Ping-Pong application instead of reading a shared file.
 
-- **Ping Pong**
-  - Receives requests at `/pingpong`
-  - Increments an in-memory counter
-  - Stores the current counter value in a shared file (`pingpong.txt`)
 
-- **Log Output**
-  - Consists of two containers in a single Pod:
-    - **Writer**
-      - Generates a random string on startup.
-      - Writes the current timestamp and random string to `output.txt` every 5 seconds.
-    - **Reader**
-      - Reads both `output.txt` and `pingpong.txt`.
-      - Displays the latest timestamp, random string and current Ping/Pong counter.
+## Components
 
-## Persistent Storage
+### Log Output
 
-The applications share a PersistentVolume mounted at:
+Contains two containers inside one Pod:
+
+- **Writer**
+  - Generates a random string on startup.
+  - Writes the timestamp and random string into a shared `emptyDir` volume every five seconds.
+
+- **Reader**
+  - Reads the latest log entry.
+  - Makes an HTTP request to the Ping-Pong service (`http://ping-pong-service/pings`).
+  - Displays both values in the browser.
+
+Example output:
+
+2026-07-06T03:18:55.201Z: xy4wui
+
+Ping / Pongs: 42
+
+
+### Ping-Pong
+
+Maintains an in-memory request counter.
+
+Endpoints:
+
+- `/pingpong`
+  - Increments the counter.
+  - Returns:
+pong 43
+
+- `/pings`
+  - Returns only the current number of pings.
+  - Used internally by the Log Output application.
+
+Example:
+42
 
 
 ## Kubernetes Resources
 
-The application uses:
+### Log Output
 
-* Deployment
-* ClusterIP Service
-* Ingress
-* emptyDir Volume
+- Deployment
+- Service
+- Ingress
 
-## Build Docker Images
+### Ping-Pong
 
-```bash
-docker build -t log-output-writer:v1 ./writer
+- Deployment
+- Service
 
-docker build -t log-output-reader:v1 ./reader
-```
+## Changes from Exercise 1.11
 
-## Import Images into k3d
+- Removed PersistentVolume.
+- Removed PersistentVolumeClaim.
+- Removed shared storage between applications.
+- Communication now happens through Kubernetes networking using ClusterIP Services.
+- Log Output retrieves the counter through HTTP requests.
 
-```bash
-k3d image import log-output-writer:v1 -c k3s-default
+## Technologies
 
-k3d image import log-output-reader:v1 -c k3s-default
-```
-
-## Deploy
-
-```bash
-kubectl apply -f manifests
-```
-
-## Verify
-
-```bash
-kubectl get deployments
-
-kubectl get pods
-
-kubectl get svc
-
-kubectl get ingress
-```
-
-## Access
-
-Open the application through the configured Ingress, for example:
-
-```text
-http://localhost:8081/
-```
-
-The response displays the contents of the shared log file, which is continuously updated by the Log Writer container.
+- Node.js
+- Koa
+- Kubernetes
+- k3d
+- Docker
