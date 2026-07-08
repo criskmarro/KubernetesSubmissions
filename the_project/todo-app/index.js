@@ -1,22 +1,30 @@
 const express = require('express');
+const axios = require('axios');
 const { ensureImage, imagePath } = require('./imageManager');
 
 const app = express();
 
 const PORT = process.env.PORT || 8080;
+const BACKEND_URL = 'http://todo-backend-svc:2345';
 
 app.use(express.urlencoded({ extended: true }));
-
-// Hardcoded todos
-const todos = [
-    "Learn Kubernetes",
-    "Finish Exercise 1.13",
-    "Deploy Todo App"
-];
 
 app.get('/', async (req, res) => {
 
     await ensureImage();
+
+    let todos = [];
+
+    try {
+
+        const response = await axios.get(`${BACKEND_URL}/todos`);
+        todos = response.data;
+
+    } catch (err) {
+
+        console.error("Unable to fetch todos:", err.message);
+
+    }
 
     const todoList = todos
         .map(todo => `<li>${todo}</li>`)
@@ -193,9 +201,7 @@ placeholder="Enter a new todo (max 140 characters)"
 required>
 
 <button type="submit">
-
 Send
-
 </button>
 
 </form>
@@ -204,11 +210,11 @@ Send
 
 <div class="todo-container">
 
-    <ul>
+<ul>
 
-        ${todoList}
+${todoList}
 
-    </ul>
+</ul>
 
 </div>
 
@@ -220,19 +226,33 @@ Send
 
 </html>
 `);
+
 });
 
-app.post('/todo', (req, res) => {
+app.post('/todo', async (req, res) => {
 
     const todo = req.body.todo;
 
-    if (todo && todo.length <= 140) {
+    if (!todo || todo.length > 140) {
 
-        todos.push(todo);
+        return res.redirect('/');
+
+    }
+
+    try {
+
+        await axios.post(`${BACKEND_URL}/todos`, {
+            todo
+        });
+
+    } catch (err) {
+
+        console.error("Unable to save todo:", err.message);
 
     }
 
     res.redirect('/');
+
 });
 
 app.get('/image', async (req, res) => {
@@ -245,6 +265,6 @@ app.get('/image', async (req, res) => {
 
 app.listen(PORT, () => {
 
-    console.log(`Todo App listening on ${PORT}`);
+    console.log(`Todo App listening on port ${PORT}`);
 
 });

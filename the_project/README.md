@@ -1,125 +1,108 @@
-# Exercise 1.13 - The Project, Step 7
+# Exercise 2.2 – The Project, Step 8
 
-## Description
+This exercise separates the Todo application into two independent services communicating over HTTP inside the Kubernetes cluster.
 
-This exercise extends the Todo application by adding the first user interface elements required for managing todos.
-
-The application now includes a form where users can enter new tasks, a send button, and a list displaying existing todos. At this stage, todos are stored only in memory and are intended as a visual demonstration before implementing persistent storage in future exercises.
-
-The random image functionality introduced in Exercise 1.12 remains unchanged and continues using a PersistentVolume for caching.
-
----
-
-## Features
-
-- Displays a random image from Lorem Picsum.
-- Caches the image for 10 minutes using a PersistentVolume.
-- Responsive user interface.
-- Input field with a maximum length of **140 characters**.
-- Send button for submitting new todos.
-- Dynamic todo list displayed below the form.
-- Modern card-based UI with improved styling.
-- Todos are temporarily stored in application memory.
-
----
-
-## Project Structure
+## Architecture
 
 ```
-the_project/
-│
-├── manifests/
-│   ├── ingress.yaml
-│   ├── persistentvolume.yaml
-│   └── persistentvolumeclaim.yaml
-│
-├── todo-app/
-│   ├── manifests/
-│   │   ├── deployment.yaml
-│   │   └── service.yaml
-│   │
-│   ├── Dockerfile
-│   ├── imageManager.js
-│   ├── index.js
-│   ├── package.json
-│   └── package-lock.json
+Browser
+   │
+   ▼
+Todo App (Frontend)
+   │
+   ├── Serves HTML
+   ├── Serves cached image
+   └── HTTP requests
+          │
+          ▼
+Todo Backend
+   ├── GET /todos
+   └── POST /todos
 ```
 
----
+The Todo App is responsible for:
 
-## User Interface
+- Rendering the HTML page.
+- Displaying the cached Lorem Picsum image.
+- Receiving form submissions.
+- Fetching todos from the backend.
+- Forwarding new todos to the backend.
 
-The application now displays:
+The Todo Backend is responsible for:
 
-- Centered page title.
-- Cached random image.
-- Todo input form.
-- Send button.
-- Todo list inside a styled card.
+- Storing todos in memory.
+- Returning the current todo list.
+- Creating new todos.
 
-Example layout:
+## Components
 
-```
-TODO APP
+### Todo App
 
-[ Random Image ]
+- Express server
+- Persistent cached image
+- Server-side rendered HTML
+- HTTP client using Axios
 
-+--------------------------------------------+
-| Enter a new todo (max 140 characters) |Send|
-+--------------------------------------------+
+### Todo Backend
 
-Todos
+- Express REST API
+- In-memory todo storage
+- GET /todos
+- POST /todos
 
-┌──────────────────────────────────────────┐
-│ Learn Kubernetes                         │
-│ Finish Exercise 1.13                     │
-│ Deploy Todo App                          │
-└──────────────────────────────────────────┘
-```
+## Endpoints
 
----
-
-## Image Cache
-
-Images are stored inside the mounted PersistentVolume:
+### Todo App
 
 ```
-/usr/src/app/files
+GET /
+GET /image
+POST /todo
 ```
 
-Stored files:
+### Todo Backend
 
-- image.jpg
-- metadata.json
+```
+GET /todos
+POST /todos
+```
 
-The cached image is refreshed every 10 minutes.
+## Build
 
----
+### Todo App
 
-## Technologies
+```bash
+docker build -t todo-app:v2 .
+k3d image import todo-app:v2 -c k3s-default
+```
 
-- Node.js
-- Express
-- Axios
-- Docker
-- Kubernetes
-- K3d
-- PersistentVolume
-- PersistentVolumeClaim
-- Ingress
+### Todo Backend
 
----
+```bash
+docker build -t todo-backend:v1 .
+k3d image import todo-backend:v1 -c k3s-default
+```
+
+## Deploy
+
+```bash
+kubectl apply -f manifests/
+```
+
+or restart after rebuilding:
+
+```bash
+kubectl rollout restart deployment todo-app-deployment
+kubectl rollout restart deployment todo-backend-deployment
+```
 
 ## Result
 
-The application displays:
+The browser can:
 
-- A centered title.
-- A cached random image.
-- The text:
+- Display the cached image.
+- View all current todos.
+- Create new todos.
+- See the updated list immediately after submission.
 
-```
-DevOps with Kubernetes 2026
-```
-
-The image remains the same for up to 10 minutes, even if the Pod restarts, thanks to persistent storage.
+The frontend and backend communicate through Kubernetes Services instead of sharing application logic.
