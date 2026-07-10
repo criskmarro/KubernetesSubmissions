@@ -1,4 +1,4 @@
-# Exercise 2.2 – The Project, Step 8
+# The Project
 
 This exercise separates the Todo application into two independent services communicating over HTTP inside the Kubernetes cluster.
 

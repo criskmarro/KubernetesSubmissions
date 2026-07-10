@@ -1,4 +1,4 @@
-# Exercise 2.1 - Connecting Pods
+# Connecting Pods
 
 This exercise updates the communication between the **Log Output** application and the **Ping-Pong** application.
 
