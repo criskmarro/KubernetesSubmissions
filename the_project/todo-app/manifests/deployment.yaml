@@ -23,6 +23,9 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: todo-app-config
           volumeMounts:
             - name: image-storage
               mountPath: /usr/src/app/files

@@ -1,11 +1,12 @@
 const express = require('express');
 const axios = require('axios');
+
 const { ensureImage, imagePath } = require('./imageManager');
 
 const app = express();
 
-const PORT = process.env.PORT || 8080;
-const BACKEND_URL = 'http://todo-backend-svc:2345';
+const PORT = process.env.PORT;
+const BACKEND_URL = process.env.TODO_BACKEND_URL;
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -242,7 +243,7 @@ app.post('/todo', async (req, res) => {
     try {
 
         await axios.post(`${BACKEND_URL}/todos`, {
-            todo
+            text: todo
         });
 
     } catch (err) {

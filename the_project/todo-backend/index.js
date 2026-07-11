@@ -5,7 +5,7 @@ const bodyParser = require('koa-bodyparser');
 const app = new Koa();
 const router = new Router();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 // In-memory storage
 const todos = [

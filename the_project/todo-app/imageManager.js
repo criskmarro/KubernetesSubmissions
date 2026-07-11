@@ -2,13 +2,13 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const directory = path.join('/', 'usr', 'src', 'app', 'files');
+const directory = process.env.IMAGE_DIRECTORY;
 
 const imagePath = path.join(directory, 'image.jpg');
 
 const metadataPath = path.join(directory, 'metadata.json');
 
-const TEN_MINUTES = 10 * 60 * 1000;
+const TEN_MINUTES = Number(process.env.IMAGE_CACHE_TIME);
 
 fs.mkdirSync(directory, { recursive: true });
 
@@ -17,8 +17,10 @@ async function downloadImage() {
     console.log("Downloading new image...");
 
     const response = await axios.get(
-        'https://picsum.photos/1200',
-        { responseType: 'stream' }
+        process.env.IMAGE_URL,
+        {
+            responseType: 'stream'
+        }
     );
 
     await new Promise((resolve, reject) => {
