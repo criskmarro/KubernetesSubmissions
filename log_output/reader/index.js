@@ -7,35 +7,77 @@ const app = new Koa();
 
 const PORT = process.env.PORT || 3000;
 
-const filePath = path.join('/', 'usr', 'src', 'app', 'files', 'output.txt');
+const logFile = path.join('/usr/src/app/files', 'output.txt');
+
+const infoFile = path.join('/usr/src/app/config', 'information.txt');
+
+const MESSAGE = process.env.MESSAGE || '';
 
 async function readLog() {
+
     try {
-        return fs.readFileSync(filePath, 'utf8');
+
+        return fs.readFileSync(logFile, 'utf8').trim();
+
     } catch {
-        return 'Log unavailable';
+
+        return 'No log available';
+
     }
+
 }
 
-async function getPings() {
+async function readInfoFile() {
+
     try {
+
+        return fs.readFileSync(infoFile, 'utf8').trim();
+
+    } catch {
+
+        return 'File not found';
+
+    }
+
+}
+
+async function getPingCount() {
+
+    try {
+
         const response = await axios.get('http://ping-pong-service/pings');
+
         return response.data;
-    } catch {
+
+    } catch (err) {
+
         return 'Unavailable';
+
     }
+
 }
 
-app.use(async ctx => {
+app.use(async (ctx) => {
 
     const log = await readLog();
-    const pings = await getPings();
+
+    const info = await readInfoFile();
+
+    const pings = await getPingCount();
 
     ctx.type = 'text/plain';
+
     ctx.body =
-`${log}
+`file content: ${info}
+env variable: MESSAGE=${MESSAGE}
+
+${log}
 
 Ping / Pongs: ${pings}`;
 });
 
-app.listen(PORT);
+app.listen(PORT, () => {
+
+    console.log("Reader started");
+
+});

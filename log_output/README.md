@@ -1,80 +1,84 @@
-# Connecting Pods
+# Log Output
 
-This exercise updates the communication between the **Log Output** application and the **Ping-Pong** application.
+This application is part of the **DevOps with Kubernetes** course.
 
-## Objective
+## Description
 
-Replace the shared Persistent Volume used in Exercise 1.11 with direct HTTP communication between the applications.
+The Log Output application consists of two containers running inside the same Pod:
 
-The Log Output application now retrieves the current ping counter by sending an HTTP request to the Ping-Pong application instead of reading a shared file.
+- **Writer**: generates a random string on startup and appends a timestamped log entry to a shared file every five seconds.
+- **Reader**: reads the latest log file, retrieves the current ping count from the Ping Pong application through HTTP, and exposes the information through an HTTP endpoint.
 
+## Architecture
 
-## Components
+```
+                 ConfigMap
+          ┌────────────────────┐
+          │ information.txt    │
+          │ MESSAGE            │
+          └─────────┬──────────┘
+                    │
+         Mounted as volume + Env Variable
+                    │
+          ┌─────────▼─────────┐
+          │   Log Reader      │
+          │-------------------│
+          │ Reads output.txt  │
+          │ Reads config file │
+          │ Reads env var     │
+          │ Calls Ping Pong   │
+          └─────────▲─────────┘
+                    │
+            Shared emptyDir
+                    │
+          ┌─────────▼─────────┐
+          │   Log Writer      │
+          │-------------------│
+          │ Generates logs    │
+          └───────────────────┘
 
-### Log Output
+                    │
+                    ▼
+           Ping Pong Service
+```
 
-Contains two containers inside one Pod:
+## Features
 
-- **Writer**
-  - Generates a random string on startup.
-  - Writes the timestamp and random string into a shared `emptyDir` volume every five seconds.
+- Generates a random identifier at startup.
+- Writes a timestamped log every five seconds.
+- Shares data between containers using an `emptyDir` volume.
+- Retrieves the ping counter using HTTP from the Ping Pong application.
+- Uses a Kubernetes ConfigMap.
+- Reads configuration from:
+  - an environment variable (`MESSAGE`)
+  - a mounted file (`information.txt`)
 
-- **Reader**
-  - Reads the latest log entry.
-  - Makes an HTTP request to the Ping-Pong service (`http://ping-pong-service/pings`).
-  - Displays both values in the browser.
+Example response:
 
-Example output:
+```
+file content: this text is from file
+env variable: MESSAGE=hello world
 
-2026-07-06T03:18:55.201Z: xy4wui
+2026-07-10T21:42:01.220Z: a1b2c3
 
-Ping / Pongs: 42
-
-
-### Ping-Pong
-
-Maintains an in-memory request counter.
-
-Endpoints:
-
-- `/pingpong`
-  - Increments the counter.
-  - Returns:
-pong 43
-
-- `/pings`
-  - Returns only the current number of pings.
-  - Used internally by the Log Output application.
-
-Example:
-42
-
+Ping / Pongs: 17
+```
 
 ## Kubernetes Resources
-
-### Log Output
 
 - Deployment
 - Service
 - Ingress
+- ConfigMap
 
-### Ping-Pong
+Namespace:
 
-- Deployment
-- Service
+```
+exercises
+```
 
-## Changes from Exercise 1.11
+## Exercise
 
-- Removed PersistentVolume.
-- Removed PersistentVolumeClaim.
-- Removed shared storage between applications.
-- Communication now happens through Kubernetes networking using ClusterIP Services.
-- Log Output retrieves the counter through HTTP requests.
+Implements:
 
-## Technologies
-
-- Node.js
-- Koa
-- Kubernetes
-- k3d
-- Docker
+- **2.5 – Documentation and ConfigMaps**
