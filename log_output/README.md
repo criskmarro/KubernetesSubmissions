@@ -12,34 +12,39 @@ The Log Output application consists of two containers running inside the same Po
 ## Architecture
 
 ```
-                 ConfigMap
-          ┌────────────────────┐
-          │ information.txt    │
-          │ MESSAGE            │
-          └─────────┬──────────┘
-                    │
-         Mounted as volume + Env Variable
-                    │
-          ┌─────────▼─────────┐
-          │   Log Reader      │
-          │-------------------│
-          │ Reads output.txt  │
-          │ Reads config file │
-          │ Reads env var     │
-          │ Calls Ping Pong   │
-          └─────────▲─────────┘
-                    │
-            Shared emptyDir
-                    │
-          ┌─────────▼─────────┐
-          │   Log Writer      │
-          │-------------------│
-          │ Generates logs    │
-          └───────────────────┘
-
-                    │
-                    ▼
-           Ping Pong Service
+                    ConfigMap
+            ┌────────────────────┐
+            │ information.txt    │
+            │ MESSAGE            │
+            └─────────┬──────────┘
+                      │
+           Mounted as volume + Env Variable
+                      │
+            ┌─────────▼─────────┐
+            │   Log Reader      │
+            │-------------------│
+            │ Reads output.txt  │
+            │ Reads config file │
+            │ Reads env var     │
+            │ HTTP GET /pings   │
+            └─────────▲─────────┘
+                      │
+              Shared emptyDir
+                      │
+            ┌─────────▼─────────┐
+            │   Log Writer      │
+            │-------------------│
+            │ Generates logs    │
+            └───────────────────┘
+                      │
+                      ▼
+             Ping Pong Service
+                      │
+                      ▼
+            PostgreSQL StatefulSet
+                      │
+                      ▼
+             Persistent Volume
 ```
 
 ## Features
@@ -47,22 +52,13 @@ The Log Output application consists of two containers running inside the same Po
 - Generates a random identifier at startup.
 - Writes a timestamped log every five seconds.
 - Shares data between containers using an `emptyDir` volume.
-- Retrieves the ping counter using HTTP from the Ping Pong application.
+- Retrieves the ping counter through HTTP from the Ping Pong application.
+- The Ping Pong application persists the counter in PostgreSQL.
+- PostgreSQL runs as a Kubernetes StatefulSet with persistent storage.
 - Uses a Kubernetes ConfigMap.
 - Reads configuration from:
   - an environment variable (`MESSAGE`)
   - a mounted file (`information.txt`)
-
-Example response:
-
-```
-file content: this text is from file
-env variable: MESSAGE=hello world
-
-2026-07-10T21:42:01.220Z: a1b2c3
-
-Ping / Pongs: 17
-```
 
 ## Kubernetes Resources
 
@@ -70,15 +66,18 @@ Ping / Pongs: 17
 - Service
 - Ingress
 - ConfigMap
+- StatefulSet (PostgreSQL)
+- Headless Service
+- PersistentVolumeClaim (dynamic provisioning)
 
 Namespace:
 
 ```
 exercises
 ```
+## Exercises
 
-## Exercise
-
-Implements:
+Implemented:
 
 - **2.5 – Documentation and ConfigMaps**
+- **2.7 – Stateful Applications**
