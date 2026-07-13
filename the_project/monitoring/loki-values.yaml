@@ -1,0 +1,38 @@
+deploymentMode: SingleBinary
+
+singleBinary:
+  replicas: 1
+  # Forzamos al contenedor principal a pedir poquísima RAM al arrancar
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+backend:
+  replicas: 0
+
+read:
+  replicas: 0
+
+write:
+  replicas: 0
+
+loki-chunks-cache:
+  enabled: false
+
+memcached:
+  enabled: false
+resultsCache:
+  enabled: false
+
+loki:
+  commonConfig:
+    replication_factor: 1
+
+  storage:
+    type: filesystem
+
+  useTestSchema: true

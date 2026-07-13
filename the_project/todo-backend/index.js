@@ -29,7 +29,27 @@ async function initializeDatabase() {
 
 }
 
+/* -------- Request logging middleware -------- */
+
+app.use(async (ctx, next) => {
+
+    const start = Date.now();
+
+    console.log(`${ctx.method} ${ctx.url}`);
+
+    await next();
+
+    const duration = Date.now() - start;
+
+    console.log(`${ctx.method} ${ctx.url} -> ${ctx.status} (${duration} ms)`);
+
+});
+
+app.use(bodyParser());
+
 router.get('/todos', async (ctx) => {
+
+    console.log("Fetching todos");
 
     const result = await pool.query(
         'SELECT text FROM todos ORDER BY id'
@@ -45,19 +65,33 @@ router.post('/todos', async (ctx) => {
 
     if (!text) {
 
+        console.log("Rejected todo: empty");
+
         ctx.status = 400;
-        ctx.body = { error: "Todo cannot be empty" };
+        ctx.body = {
+            error: "Todo cannot be empty"
+        };
+
         return;
 
     }
 
     if (text.length > 140) {
 
+        console.log(
+            `Rejected todo (${text.length} chars): ${text}`
+        );
+
         ctx.status = 400;
-        ctx.body = { error: "Todo too long" };
+        ctx.body = {
+            error: "Todo too long"
+        };
+
         return;
 
     }
+
+    console.log(`Creating todo: ${text}`);
 
     await pool.query(
         'INSERT INTO todos(text) VALUES($1)',
@@ -65,13 +99,12 @@ router.post('/todos', async (ctx) => {
     );
 
     ctx.status = 201;
+
     ctx.body = {
         message: "Todo created"
     };
 
 });
-
-app.use(bodyParser());
 
 app.use(router.routes());
 
@@ -82,7 +115,7 @@ initializeDatabase()
 
     app.listen(PORT, () => {
 
-        console.log(`Todo Backend running on ${PORT}`);
+        console.log(`Todo Backend running on port ${PORT}`);
 
     });
 
