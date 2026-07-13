@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: todo-reminder
+
+spec:
+  schedule: "0 * * * *"
+
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+
+  jobTemplate:
+
+    spec:
+      ttlSecondsAfterFinished: 3600
+
+      template:
+
+        spec:
+
+          restartPolicy: Never
+
+          containers:
+
+          - name: todo-reminder
+            image: todo-cronjob:v1
+            imagePullPolicy: Never
+
+            env:
+
+            - name: BACKEND_URL
+              value: http://todo-backend-service:2345
