@@ -19,15 +19,21 @@ spec:
 
     spec:
       containers:
-        - name: todo-backend
 
-          image: todo-backend:v1
+      - name: todo-backend
 
-          imagePullPolicy: Never
+        image: todo-backend:v2
 
-          env:
-            - name: PORT
-              value: "3000"
+        imagePullPolicy: Never
 
-          ports:
-            - containerPort: 3000
+        ports:
+
+        - containerPort: 3000
+
+        envFrom:
+
+        - configMapRef:
+            name: todo-backend-config
+
+        - secretRef:
+            name: todo-backend-secret

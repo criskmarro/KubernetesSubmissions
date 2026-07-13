@@ -7,8 +7,9 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "koa": "^3.2.1",
     "@koa/router": "^13.1.0",
-    "koa-bodyparser": "^4.4.1"
+    "koa": "^3.2.1",
+    "koa-bodyparser": "^4.4.1",
+    "pg": "^8.22.0"
   }
 }

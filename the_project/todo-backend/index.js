@@ -1,48 +1,94 @@
 const Koa = require('koa');
 const Router = require('@koa/router');
 const bodyParser = require('koa-bodyparser');
+const { Pool } = require('pg');
 
 const app = new Koa();
 const router = new Router();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
-// In-memory storage
-const todos = [
-  "Learn JavaScript",
-  "Learn Kubernetes",
-  "Finish DevOps course"
-];
-
-router.get('/todos', (ctx) => {
-  ctx.body = todos;
+const pool = new Pool({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD
 });
 
-router.post('/todos', (ctx) => {
-  const { text } = ctx.request.body;
+async function initializeDatabase() {
 
-  if (!text) {
-    ctx.status = 400;
-    ctx.body = { error: "Todo cannot be empty" };
-    return;
-  }
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS todos (
+            id SERIAL PRIMARY KEY,
+            text VARCHAR(140) NOT NULL
+        );
+    `);
 
-  if (text.length > 140) {
-    ctx.status = 400;
-    ctx.body = { error: "Todo exceeds 140 characters" };
-    return;
-  }
+    console.log("Database initialized");
 
-  todos.push(text);
+}
 
-  ctx.status = 201;
-  ctx.body = { message: "Todo created" };
+router.get('/todos', async (ctx) => {
+
+    const result = await pool.query(
+        'SELECT text FROM todos ORDER BY id'
+    );
+
+    ctx.body = result.rows.map(row => row.text);
+
+});
+
+router.post('/todos', async (ctx) => {
+
+    const { text } = ctx.request.body;
+
+    if (!text) {
+
+        ctx.status = 400;
+        ctx.body = { error: "Todo cannot be empty" };
+        return;
+
+    }
+
+    if (text.length > 140) {
+
+        ctx.status = 400;
+        ctx.body = { error: "Todo too long" };
+        return;
+
+    }
+
+    await pool.query(
+        'INSERT INTO todos(text) VALUES($1)',
+        [text]
+    );
+
+    ctx.status = 201;
+    ctx.body = {
+        message: "Todo created"
+    };
+
 });
 
 app.use(bodyParser());
+
 app.use(router.routes());
+
 app.use(router.allowedMethods());
 
-app.listen(PORT, () => {
-  console.log(`Todo Backend running on port ${PORT}`);
+initializeDatabase()
+.then(() => {
+
+    app.listen(PORT, () => {
+
+        console.log(`Todo Backend running on ${PORT}`);
+
+    });
+
+})
+.catch(err => {
+
+    console.error(err);
+
 });

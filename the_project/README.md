@@ -1,11 +1,20 @@
 # The Project
 
-This exercise separates the Todo application into two independent services communicating over HTTP inside the Kubernetes cluster.
+This project is part of the DevOps with Kubernetes course.
+
+## Description
+
+The application is divided into two independent services that communicate over HTTP inside the Kubernetes cluster.
+
+The frontend serves the user interface and cached image, while the backend exposes a REST API for managing todos. Todo items are now stored in a PostgreSQL database running as a Kubernetes StatefulSet.
 
 ## Architecture
 
 ```
 Browser
+   │
+   ▼
+Ingress
    │
    ▼
 Todo App (Frontend)
@@ -16,8 +25,16 @@ Todo App (Frontend)
           │
           ▼
 Todo Backend
+   │
    ├── GET /todos
-   └── POST /todos
+   ├── POST /todos
+   └── PostgreSQL client
+          │
+          ▼
+PostgreSQL Service
+          │
+          ▼
+PostgreSQL StatefulSet
 ```
 
 The Todo App is responsible for:
@@ -39,16 +56,23 @@ The Todo Backend is responsible for:
 ### Todo App
 
 - Express server
-- Persistent cached image
 - Server-side rendered HTML
-- HTTP client using Axios
+- Cached Lorem Picsum image
+- Axios HTTP client
+- Image cache stored on a Persistent Volume
 
-### Todo Backend
+## Todo Backend
 
-- Express REST API
-- In-memory todo storage
+- Koa REST API
+- PostgreSQL client (pg)
+- Automatic database initialization
 - GET /todos
 - POST /todos
+- PostgreSQL
+- StatefulSet (1 replica)
+- Headless Service
+- Dynamic Persistent Volume (local-path)
+- Configured using ConfigMaps and Secrets
 
 ## Endpoints
 
@@ -72,20 +96,26 @@ POST /todos
 ### Todo App
 
 ```bash
-docker build -t todo-app:v2 .
-k3d image import todo-app:v2 -c k3s-default
+docker build -t todo-app:v3 .
+k3d image import todo-app:v3 -c k3s-default
 ```
 
 ### Todo Backend
 
 ```bash
-docker build -t todo-backend:v1 .
-k3d image import todo-backend:v1 -c k3s-default
+docker build -t todo-backend:v2 .
+k3d image import todo-backend:v2 -c k3s-default
 ```
 
 ## Deploy
 
 ```bash
+kubectl apply -f postgres/
+
+kubectl apply -f todo-backend/manifests/
+
+kubectl apply -f todo-app/manifests/
+
 kubectl apply -f manifests/
 ```
 
