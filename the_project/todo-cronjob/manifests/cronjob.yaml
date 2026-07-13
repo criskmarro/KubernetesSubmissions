@@ -30,4 +30,4 @@ spec:
             env:
 
             - name: BACKEND_URL
-              value: http://todo-backend-service:2345
+              value: http://todo-backend-service
