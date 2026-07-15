@@ -7,11 +7,12 @@ metadata:
 
 spec:
 
-  type: LoadBalancer
+  type: NodePort
 
   selector:
     app: ping-pong
 
   ports:
-    - port: 80
+    - protocol: TCP
+      port: 80
       targetPort: 3001

@@ -59,21 +59,29 @@ async function getPingCount() {
 
 app.use(async (ctx) => {
 
-    const log = await readLog();
+    if (ctx.path === '/healthz') {
+        ctx.status = 200;
+        ctx.body = 'OK';
+        return;
+    }
 
-    const info = await readInfoFile();
+    if (ctx.path === '/') {
+        const log = await readLog();
+        const info = await readInfoFile();
+        const pings = await getPingCount();
 
-    const pings = await getPingCount();
-
-    ctx.type = 'text/plain';
-
-    ctx.body =
-`file content: ${info}
+        ctx.type = 'text/plain';
+        ctx.body =
+            `file content: ${info}
 env variable: MESSAGE=${MESSAGE}
 
 ${log}
 
 Ping / Pongs: ${pings}`;
+        return;
+    }
+    ctx.status = 404;
+    ctx.body = 'Not Found';
 });
 
 app.listen(PORT, () => {

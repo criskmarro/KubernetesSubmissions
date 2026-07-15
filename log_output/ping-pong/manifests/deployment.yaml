@@ -21,10 +21,24 @@ spec:
       containers:
       - name: ping-pong
         image: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/ping-pong:GKE
-        
+
         ports:
           - containerPort: 3001
-          
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
         env:
 
         - name: POSTGRES_HOST
