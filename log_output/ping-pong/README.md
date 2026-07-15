@@ -1,90 +1,121 @@
-More Services
+# Ping Pong (GKE)
+
+This exercise deploys the **Ping Pong** application to **Google Kubernetes Engine (GKE)**.
+
+Unlike the previous local exercises that used an Ingress with k3d, this deployment exposes the application through a Kubernetes **LoadBalancer** Service.
 
 ## Description
 
-This exercise introduces a second application called **Ping Pong** that runs alongside the Todo application.
+The application exposes a single endpoint:
 
-Both applications are deployed in the same Kubernetes cluster and are exposed through a shared Ingress.
+```http
+GET /pingpong
+```
 
-## Applications
-
-### Todo App
-
-* Displays the Todo application page.
-* Exposed through the root path (`/`).
-
-### Ping Pong
-
-* Responds to `GET /pingpong`.
-* Returns `pong <counter>`.
-* Increments an in-memory counter on every request.
+Each request increments a counter stored in a PostgreSQL database and returns the current value.
 
 Example:
 
 ```text
-GET /pingpong
-
 pong 1
 pong 2
 pong 3
 ```
 
-The counter is stored in memory, so it resets if the Pod is recreated.
+Because the counter is stored in PostgreSQL, the value survives Pod restarts.
+
+---
+
+## Architecture
+
+```text
+Internet
+    │
+    ▼
+LoadBalancer Service
+    │
+    ▼
+Ping Pong Deployment
+    │
+    ▼
+PostgreSQL Service
+    │
+    ▼
+PostgreSQL StatefulSet
+```
+
+---
 
 ## Kubernetes Resources
 
-The project uses:
+The deployment uses:
 
-* Deployment (Todo App)
-* ClusterIP Service (Todo App)
-* Deployment (Ping Pong)
-* ClusterIP Service (Ping Pong)
-* Shared Ingress
+- Namespace
+- Deployment
+- LoadBalancer Service
+- PostgreSQL StatefulSet
+- PostgreSQL Service
+- ConfigMap
+- Secret
 
-## Build Docker Images
+---
 
-```bash
-docker build -t todo-app:v2 ./todo-app
-
-docker build -t ping-pong:v1 ./ping-pong
-```
-
-## Import Images into k3d
+## Build
 
 ```bash
-k3d image import todo-app:v2 -c k3s-default
-
-k3d image import ping-pong:v1 -c k3s-default
+docker build -t ping-pong:GKE .
 ```
+
+---
+
+## Push Image to Artifact Registry
+
+```bash
+docker tag ping-pong:GKE us-east1-docker.pkg.dev/<PROJECT_ID>/kubernetes/ping-pong:GKE
+
+docker push us-east1-docker.pkg.dev/<PROJECT_ID>/kubernetes/ping-pong:GKE
+```
+
+---
 
 ## Deploy
 
 ```bash
-kubectl apply -f manifests
+kubectl apply -f postgres/
+
+kubectl apply -f manifests/
 ```
+
+---
 
 ## Verify
 
 ```bash
-kubectl get deployments
-
 kubectl get pods
 
 kubectl get svc
 
-kubectl get ingress
+kubectl get statefulsets
 ```
+
+Wait until the LoadBalancer receives an external IP:
+
+```bash
+kubectl get svc --watch
+```
+
+---
 
 ## Access
 
-Todo App
-
 ```text
-http://localhost:8081/
+http://<EXTERNAL-IP>/pingpong
 ```
 
-Ping Pong
+---
 
-```text
-http://localhost:8081/pingpong
-```
+## Exercise
+
+Implements:
+
+- **3.1 – Ping Pong GKE**

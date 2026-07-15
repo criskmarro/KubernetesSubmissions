@@ -20,8 +20,7 @@ spec:
     spec:
       containers:
       - name: ping-pong
-        image: ping-pong:v2
-        imagePullPolicy: Never
+        image: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/ping-pong:GKE
         
         ports:
           - containerPort: 3001
