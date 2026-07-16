@@ -9,7 +9,7 @@ The Log Output application consists of two containers running inside the same Po
 - **Writer**: generates a random string on startup and appends a timestamped log entry to a shared file every five seconds.
 - **Reader**: reads the latest log entry, retrieves the current ping count from the Ping Pong application through HTTP, and exposes the information through an HTTP endpoint.
 
-The application is deployed to **Google Kubernetes Engine (GKE)** and exposed through a Kubernetes **Ingress** together with the Ping Pong application.
+The application is deployed to **Google Kubernetes Engine (GKE)** and exposed through the **Gateway API**, sharing the same Gateway with the Ping Pong application.
 
 ## Architecture
 
@@ -40,6 +40,9 @@ The application is deployed to **Google Kubernetes Engine (GKE)** and exposed th
             └───────────────────┘
                       │
                       ▼
+             Gateway API (HTTPRoute)
+                      │
+                      ▼
              Ping Pong Service
                       │
                       ▼
@@ -61,12 +64,14 @@ The application is deployed to **Google Kubernetes Engine (GKE)** and exposed th
   - an environment variable (`MESSAGE`)
   - a mounted file (`information.txt`)
 - The Ping Pong application stores its counter in a PostgreSQL database running as a StatefulSet with persistent storage.
+- Uses the Kubernetes Gateway API for external HTTP routing on Google Kubernetes Engine.
 
 ## Kubernetes Resources
 
 - Deployment
-- NodePort Service
-- Ingress
+- ClusterIP Service
+- Gateway
+- HTTPRoute
 - ConfigMap
 - PostgreSQL StatefulSet
 - Headless Service
@@ -85,3 +90,4 @@ Implemented:
 - **2.5 – Documentation and ConfigMaps**
 - **2.7 – Stateful Applications**
 - **3.2 – Back to Ingress**
+- **3.3 – To the Gateway**
