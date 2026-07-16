@@ -29,8 +29,6 @@ async function initializeDatabase() {
 
 }
 
-/* -------- Request logging middleware -------- */
-
 app.use(async (ctx, next) => {
 
     const start = Date.now();

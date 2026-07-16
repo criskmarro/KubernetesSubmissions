@@ -22,9 +22,7 @@ spec:
 
       - name: todo-backend
 
-        image: todo-backend:v2
-
-        imagePullPolicy: Never
+        image: PROJECT/todo-backend
 
         ports:
 

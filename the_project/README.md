@@ -1,63 +1,59 @@
 # The Project
 
-This project is part of the DevOps with Kubernetes course.
+This project is part of the **DevOps with Kubernetes** course.
 
 ## Description
 
-The application is divided into two independent services that communicate over HTTP inside the Kubernetes cluster.
+The application consists of independent frontend and backend services communicating over HTTP inside a Kubernetes cluster.
 
-The frontend serves the user interface and cached image, while the backend exposes a REST API for managing todos. Todo items are now stored in a PostgreSQL database running as a Kubernetes StatefulSet.
+The frontend serves the user interface and cached image, while the backend exposes a REST API for managing todos stored in a PostgreSQL database.
+
+The application is deployed to **Google Kubernetes Engine (GKE)** using **Kustomize**, **Gateway API**, and **Artifact Registry**.
+
+---
 
 ## Architecture
 
-```
-Browser
-   │
-   ▼
-Ingress
-   │
-   ▼
-Todo App (Frontend)
-   │
-   ├── Serves HTML
-   ├── Serves cached image
-   └── HTTP requests
-          │
-          ▼
-Todo Backend
-   │
-   ├── GET /todos
-   ├── POST /todos
-   └── PostgreSQL client
-          │
-          ▼
-PostgreSQL Service
-          │
-          ▼
-PostgreSQL StatefulSet
-         ▲
-         │
-Hourly CronJob (Kubernetes)
-         │
-Requests random Wikipedia page
-         │
-         ▼
+```text
+                    Browser
+                       │
+                       ▼
+                 Gateway API
+                       │
+                       ▼
+                HTTPRoute (/)
+                       │
+                       ▼
+              Todo App (Frontend)
+                       │
+        ┌──────────────┴──────────────┐
+        │                             │
+        ▼                             ▼
+ Cached Lorem Picsum Image     Todo Backend
+ (Persistent Volume)                │
+                                    │
+                              PostgreSQL Client
+                                    │
+                                    ▼
+                         PostgreSQL Headless Service
+                                    │
+                                    ▼
+                        PostgreSQL StatefulSet
+                                    │
+                                    ▼
+                         Persistent Volume Claim
+
+              ▲
+              │
+      Kubernetes CronJob
+              │
+Requests random Wikipedia article
+              │
+              ▼
 Creates "Read <Wikipedia URL>" todo
 ```
 
-The Todo App is responsible for:
-
-- Rendering the HTML page.
-- Displaying the cached Lorem Picsum image.
-- Receiving form submissions.
-- Fetching todos from the backend.
-- Forwarding new todos to the backend.
-
-The Todo Backend is responsible for:
-
-- Storing todos in memory.
-- Returning the current todo list.
-- Creating new todos.
+---
 
 ## Components
 
@@ -69,39 +65,36 @@ The Todo Backend is responsible for:
 - Axios HTTP client
 - Image cache stored on a Persistent Volume
 
-## Todo Backend
+### Todo Backend
 
 - Koa REST API
-- PostgreSQL client (pg)
+- PostgreSQL client
 - Automatic database initialization
 - Request logging
 - Backend validation (140 character limit)
 - GET /todos
 - POST /todos
-- PostgreSQL
-- StatefulSet (1 replica)
-- Headless Service
-- Dynamic Persistent Volume (local-path)
-- Configured using ConfigMaps and Secrets
 
 ### PostgreSQL
 
-- StatefulSet
+- StatefulSet (1 replica)
+- Headless Service
 - Persistent storage
-- Kubernetes Service
-- Configuration through ConfigMap and Secret
+- Configured through ConfigMap and Secret
 
 ### CronJob
 
-Runs once every hour and:
+Runs every hour and:
 
 1. Requests a random Wikipedia article.
-2. Extracts the redirected URL.
-3. Creates a todo in the backend in the format:
+2. Reads the redirected URL.
+3. Creates a new todo:
 
 ```
 Read https://en.wikipedia.org/wiki/...
 ```
+
+---
 
 ## Kubernetes Resources
 
@@ -110,14 +103,18 @@ Read https://en.wikipedia.org/wiki/...
 - Secrets
 - Deployments
 - Services
-- Ingress
+- Gateway
+- HTTPRoute
 - StatefulSet
 - PersistentVolumeClaim
 - CronJob
+- Kustomization
+
+---
 
 ## Endpoints
 
-### Todo App
+### Frontend
 
 ```
 GET /
@@ -125,56 +122,79 @@ GET /image
 POST /todo
 ```
 
-### Todo Backend
+### Backend
 
 ```
 GET /todos
 POST /todos
 ```
 
-## Build
+---
+
+## Build Images
 
 ### Todo App
 
 ```bash
-docker build -t todo-app:v3 .
-k3d image import todo-app:v3 -c k3s-default
+docker build -t todo-app:GKE ./todo-app
 ```
 
 ### Todo Backend
 
 ```bash
-docker build -t todo-backend:v2 .
-k3d image import todo-backend:v2 -c k3s-default
+docker build -t todo-backend:GKE ./todo-backend
 ```
 
 ### Todo CronJob
 
 ```bash
-docker build -t todo-cronjob:v1 .
-k3d image import todo-cronjob:v1 -c k3s-default
+docker build -t todo-cronjob:GKE ./todo-cronjob
 ```
+
+---
+
+## Push Images to Artifact Registry
+
+```bash
+docker tag todo-app:GKE us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-app:GKE
+docker push us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-app:GKE
+
+docker tag todo-backend:GKE us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-backend:GKE
+docker push us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-backend:GKE
+
+docker tag todo-cronjob:GKE us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-cronjob:GKE
+docker push us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-cronjob:GKE
+```
+
+---
 
 ## Deploy
 
-```bash
-kubectl apply -f postgres/
-
-kubectl apply -f todo-backend/manifests/
-
-kubectl apply -f todo-app/manifests/
-
-kubectl apply -f todo-cronjob/manifests/
-
-kubectl apply -f manifests/
-```
-
-or restart after rebuilding:
+Deploy the entire project using Kustomize:
 
 ```bash
-kubectl rollout restart deployment todo-app-deployment
-kubectl rollout restart deployment todo-backend-deployment
+kubectl apply -k .
 ```
+
+Verify:
+
+```bash
+kubectl get all -n project
+
+kubectl get gateway -n project
+
+kubectl get httproute -n project
+
+kubectl get pvc -n project
+```
+
+Retrieve the Gateway address:
+
+```bash
+kubectl get gateway project-gateway -n project
+```
+
+---
 
 ## Result
 
@@ -185,11 +205,17 @@ The application now provides:
 - Automatic hourly reading reminders generated by Kubernetes CronJobs.
 - Request logging for every incoming todo.
 - Backend validation for the 140-character limit.
-- Internal communication through Kubernetes Services.
+- Gateway API routing on Google Kubernetes Engine.
+- Declarative deployments using Kustomize.
+- Container images stored in Artifact Registry.
 
-## Exercise
+---
 
-Implements:
+## Exercises
 
+Implemented:
+
+- **2.8 – The project, step 11**
 - **2.9 – The project, step 12**
 - **2.10 – The project, step 13**
+- **3.5 – The project, step 14**
