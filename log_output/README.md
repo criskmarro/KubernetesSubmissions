@@ -11,6 +11,8 @@ The Log Output application consists of two containers running inside the same Po
 
 The application is deployed to **Google Kubernetes Engine (GKE)** and exposed through the **Gateway API**, sharing the same Gateway with the Ping Pong application.
 
+The Gateway API uses **URL rewriting**, allowing the Ping Pong application to expose its functionality at its root path (`/`) while still being available externally at `/pingpong`.
+
 ## Architecture
 
 ```text
@@ -40,7 +42,8 @@ The application is deployed to **Google Kubernetes Engine (GKE)** and exposed th
             └───────────────────┘
                       │
                       ▼
-             Gateway API (HTTPRoute)
+         Gateway API (HTTPRoute)
+         URL Rewrite: /pingpong → /
                       │
                       ▼
              Ping Pong Service
@@ -64,7 +67,8 @@ The application is deployed to **Google Kubernetes Engine (GKE)** and exposed th
   - an environment variable (`MESSAGE`)
   - a mounted file (`information.txt`)
 - The Ping Pong application stores its counter in a PostgreSQL database running as a StatefulSet with persistent storage.
-- Uses the Kubernetes Gateway API for external HTTP routing on Google Kubernetes Engine.
+- Uses the Kubernetes Gateway API for external HTTP routing.
+- Uses Gateway API URL rewriting so the Ping Pong application can expose its API at `/` while remaining accessible externally through `/pingpong`.
 
 ## Kubernetes Resources
 
@@ -91,3 +95,4 @@ Implemented:
 - **2.7 – Stateful Applications**
 - **3.2 – Back to Ingress**
 - **3.3 – To the Gateway**
+- **3.4 – Rewritten Routing**

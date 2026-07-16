@@ -30,7 +30,20 @@ spec:
         type: PathPrefix
         value: /pingpong
 
+    filters:
+
+    - type: URLRewrite
+
+      urlRewrite:
+
+        path:
+
+          type: ReplacePrefixMatch
+
+          replacePrefixMatch: /
+
     backendRefs:
 
     - name: ping-pong-service
+
       port: 80

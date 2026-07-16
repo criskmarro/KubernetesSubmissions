@@ -58,12 +58,6 @@ app.use(async (ctx) => {
 
     if (ctx.path === "/") {
 
-        ctx.body = "Ping Pong";
-        return;
-    }
-    
-    if (ctx.path === "/pingpong") {
-
         const result = await pool.query(`
             UPDATE counter
             SET value = value + 1
