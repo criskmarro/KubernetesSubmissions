@@ -1,0 +1,52 @@
+name: Delete Branch Environment
+
+on:
+  delete:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: dwk-cluster
+  GKE_ZONE: us-east1-b
+
+jobs:
+
+  delete-environment:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Authenticate
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Delete namespace
+        run: |
+          BRANCH="${{ github.event.ref }}"
+
+          echo "Deleted branch: $BRANCH"
+
+          if [ "$BRANCH" = "main" ]; then
+            echo "Production namespace is preserved."
+            exit 0
+          fi
+
+          kubectl delete namespace "$BRANCH" --ignore-not-found=true
+
+          echo "Namespace deleted successfully."
