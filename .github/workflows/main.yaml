@@ -84,6 +84,11 @@ jobs:
       - name: Push Todo CronJob
         run: docker push $TODO_CRONJOB_IMAGE
 
+      - name: Verify Gateway API
+        run: |
+          kubectl api-resources | grep gateway || true
+          kubectl get gatewayclass || true
+
       - name: Deploy to GKE
         working-directory: ./the_project
         run: |
