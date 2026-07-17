@@ -158,3 +158,4 @@ Implemented:
 - **2.10 – The project, step 13**
 - **3.5 – The project, step 14**
 - **3.6 – The project, step 15**
+- **3.7 – The project, step 16**
