@@ -124,19 +124,19 @@ The application now provides:
 
 ---
 
-## CI/CD
+## Continuous Deployment
 
-Deployment is fully automated using GitHub Actions.
+The project uses GitHub Actions for automated CI/CD to Google Kubernetes Engine.
 
-Every push to the **main** branch automatically:
+The deployment pipeline provides:
 
-1. Builds Docker images
-2. Pushes images to Google Artifact Registry
-3. Updates image references with Kustomize
-4. Deploys the application to Google Kubernetes Engine
-5. Waits for successful rollout
-
----
+- Builds Docker images for the Todo App, Todo Backend and Todo CronJob.
+- Publishes images to Google Artifact Registry.
+- Deploys the application to Google Kubernetes Engine using Kustomize.
+- Automatically updates Kubernetes manifests with the generated image tags.
+- Deploys the `main` branch to the `project` namespace.
+- Creates isolated Kubernetes namespaces for feature branches.
+- Automatically removes feature branch environments when branches are deleted.
 
 ## Storage
 
@@ -159,3 +159,4 @@ Implemented:
 - **3.5 – The project, step 14**
 - **3.6 – The project, step 15**
 - **3.7 – The project, step 16**
+- **3.8 – The project, step 17**
