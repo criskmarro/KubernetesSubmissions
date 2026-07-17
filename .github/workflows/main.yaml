@@ -92,6 +92,21 @@ jobs:
       - name: Deploy to GKE
         working-directory: ./the_project
         run: |
+
+          if [ "$BRANCH" = "main" ]; then
+            NAMESPACE="project"
+          else
+            NAMESPACE="$BRANCH"
+          fi
+
+          echo "Deploying to namespace: $NAMESPACE"
+
+          kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl config set-context --current --namespace=$NAMESPACE
+
+          kustomize edit set namespace $NAMESPACE
+
           kustomize edit set image PROJECT/todo-app=$TODO_APP_IMAGE
           kustomize edit set image PROJECT/todo-backend=$TODO_BACKEND_IMAGE
           kustomize edit set image PROJECT/todo-cronjob=$TODO_CRONJOB_IMAGE
