@@ -15,42 +15,38 @@ The application is deployed to **Google Kubernetes Engine (GKE)** using **Kustom
 ## Architecture
 
 ```text
-                    Browser
-                       │
-                       ▼
-                 Gateway API
-                       │
-                       ▼
-                HTTPRoute (/)
-                       │
-                       ▼
-              Todo App (Frontend)
-                       │
-        ┌──────────────┴──────────────┐
-        │                             │
-        ▼                             ▼
- Cached Lorem Picsum Image     Todo Backend
- (Persistent Volume)                │
-                                    │
-                              PostgreSQL Client
-                                    │
-                                    ▼
-                         PostgreSQL Headless Service
-                                    │
-                                    ▼
-                        PostgreSQL StatefulSet
-                                    │
-                                    ▼
-                         Persistent Volume Claim
+                     Browser
+                        │
+                        ▼
+                 Gateway API (GKE)
+                        │
+                        ▼
+                 Todo App (Frontend)
+                ┌─────────────────────┐
+                │ Serves HTML          │
+                │ Cached image         │
+                │ HTTP client          │
+                └─────────┬───────────┘
+                          │
+                          ▼
+                 Todo Backend API
+                ┌─────────────────────┐
+                │ GET /todos          │
+                │ POST /todos         │
+                │ PostgreSQL client   │
+                └─────────┬───────────┘
+                          │
+                          ▼
+                   PostgreSQL
+                 StatefulSet + PVC
 
-              ▲
-              │
-      Kubernetes CronJob
-              │
-Requests random Wikipedia article
-              │
-              ▼
-Creates "Read <Wikipedia URL>" todo
+Hourly CronJob
+        │
+        ▼
+Random Wikipedia page
+        │
+        ▼
+Creates a new Todo
 ```
 
 ---
@@ -96,103 +92,20 @@ Read https://en.wikipedia.org/wiki/...
 
 ---
 
-## Kubernetes Resources
+## Features
 
-- Namespace
+- Gateway API for external traffic routing
+- Todo REST API
+- Persistent PostgreSQL database
+- Persistent image cache using PersistentVolumeClaim
+- Automatic database initialization
+- Kubernetes CronJob
 - ConfigMaps
 - Secrets
-- Deployments
-- Services
-- Gateway
-- HTTPRoute
-- StatefulSet
-- PersistentVolumeClaim
-- CronJob
-- Kustomization
-
----
-
-## Endpoints
-
-### Frontend
-
-```
-GET /
-GET /image
-POST /todo
-```
-
-### Backend
-
-```
-GET /todos
-POST /todos
-```
-
----
-
-## Build Images
-
-### Todo App
-
-```bash
-docker build -t todo-app:GKE ./todo-app
-```
-
-### Todo Backend
-
-```bash
-docker build -t todo-backend:GKE ./todo-backend
-```
-
-### Todo CronJob
-
-```bash
-docker build -t todo-cronjob:GKE ./todo-cronjob
-```
-
----
-
-## Push Images to Artifact Registry
-
-```bash
-docker tag todo-app:GKE us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-app:GKE
-docker push us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-app:GKE
-
-docker tag todo-backend:GKE us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-backend:GKE
-docker push us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-backend:GKE
-
-docker tag todo-cronjob:GKE us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-cronjob:GKE
-docker push us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-cronjob:GKE
-```
-
----
-
-## Deploy
-
-Deploy the entire project using Kustomize:
-
-```bash
-kubectl apply -k .
-```
-
-Verify:
-
-```bash
-kubectl get all -n project
-
-kubectl get gateway -n project
-
-kubectl get httproute -n project
-
-kubectl get pvc -n project
-```
-
-Retrieve the Gateway address:
-
-```bash
-kubectl get gateway project-gateway -n project
-```
+- StatefulSets
+- Automatic deployment with GitHub Actions
+- Docker images stored in Google Artifact Registry
+- Kustomize configuration management
 
 ---
 
@@ -211,11 +124,37 @@ The application now provides:
 
 ---
 
+## CI/CD
+
+Deployment is fully automated using GitHub Actions.
+
+Every push to the **main** branch automatically:
+
+1. Builds Docker images
+2. Pushes images to Google Artifact Registry
+3. Updates image references with Kustomize
+4. Deploys the application to Google Kubernetes Engine
+5. Waits for successful rollout
+
+---
+
+## Storage
+
+The frontend stores downloaded images in a PersistentVolumeClaim.
+
+```
+todo-images-claim
+```
+
+This ensures downloaded images survive Pod restarts.
+
+---
+
 ## Exercises
 
 Implemented:
 
-- **2.8 – The project, step 11**
 - **2.9 – The project, step 12**
 - **2.10 – The project, step 13**
 - **3.5 – The project, step 14**
+- **3.6 – The project, step 15**
