@@ -188,7 +188,7 @@ li:hover{
 
 <div class="container">
 
-<h1>TODO APP - TEST</h1>
+<h1>TODO APP</h1>
 
 <img src="/image">
 
