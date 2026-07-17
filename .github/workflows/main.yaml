@@ -26,7 +26,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -41,3 +40,63 @@ jobs:
 
       - name: Verify authentication
         run: gcloud info
+
+      - name: Configure Docker
+        run: gcloud --quiet auth configure-docker $REGISTRY
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Install Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Form image names
+        run: |
+          echo "TODO_APP_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-app:$BRANCH-$GITHUB_SHA" >> $GITHUB_ENV
+          echo "TODO_BACKEND_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-backend:$BRANCH-$GITHUB_SHA" >> $GITHUB_ENV
+          echo "TODO_CRONJOB_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-cronjob:$BRANCH-$GITHUB_SHA" >> $GITHUB_ENV
+
+      - name: Build Todo App
+        run: docker build -t $TODO_APP_IMAGE ./the_project/todo-app
+
+      - name: Build Todo Backend
+        run: docker build -t $TODO_BACKEND_IMAGE ./the_project/todo-backend
+
+      - name: Build Todo CronJob
+        run: docker build -t $TODO_CRONJOB_IMAGE ./the_project/todo-cronjob
+
+      - name: Show built images
+        run: docker images
+
+      - name: Push Todo App
+        run: docker push $TODO_APP_IMAGE
+
+      - name: Push Todo Backend
+        run: docker push $TODO_BACKEND_IMAGE
+
+      - name: Push Todo CronJob
+        run: docker push $TODO_CRONJOB_IMAGE
+
+      - name: Deploy to GKE
+        working-directory: ./the_project
+        run: |
+          kustomize edit set image PROJECT/todo-app=$TODO_APP_IMAGE
+          kustomize edit set image PROJECT/todo-backend=$TODO_BACKEND_IMAGE
+          kustomize edit set image PROJECT/todo-cronjob=$TODO_CRONJOB_IMAGE
+
+          kustomize build . | kubectl apply -f -
+
+          kubectl rollout status deployment/todo-app-deployment -n project --timeout=300s
+          kubectl rollout status deployment/todo-backend-deployment -n project --timeout=300s
+
+          kubectl get pods -n project
+          kubectl get svc -n project
+          kubectl get gateway -n project
+          kubectl get httproute -n project

@@ -15,12 +15,9 @@ images:
 
   - name: PROJECT/todo-app
     newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-app
-    newTag: GKE
 
   - name: PROJECT/todo-backend
     newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-backend
-    newTag: GKE
 
   - name: PROJECT/todo-cronjob
     newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-cronjob
-    newTag: GKE
