@@ -2,9 +2,7 @@ name: Deploy Project to GKE
 
 on:
   push:
-    branches:
-      - main
-
+   
 permissions:
   contents: read
   id-token: write
@@ -113,10 +111,10 @@ jobs:
 
           kustomize build . | kubectl apply -f -
 
-          kubectl rollout status deployment/todo-app-deployment -n project --timeout=300s
-          kubectl rollout status deployment/todo-backend-deployment -n project --timeout=300s
+          kubectl rollout status deployment/todo-app-deployment -n $NAMESPACE --timeout=300s
+          kubectl rollout status deployment/todo-backend-deployment -n $NAMESPACE --timeout=300s
 
-          kubectl get pods -n project
-          kubectl get svc -n project
-          kubectl get gateway -n project
-          kubectl get httproute -n project
+          kubectl get pods -n $NAMESPACE
+          kubectl get svc -n $NAMESPACE
+          kubectl get gateway -n $NAMESPACE
+          kubectl get httproute -n $NAMESPACE  
