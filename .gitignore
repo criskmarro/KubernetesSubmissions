@@ -23,3 +23,5 @@ logs
 # Docker
 
 .dockerignore
+
+key.json

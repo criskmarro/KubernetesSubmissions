@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: postgres-backup
+
+spec:
+  schedule: "0 0 * * *"
+
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+
+  jobTemplate:
+    spec:
+      template:
+        spec:
+
+          restartPolicy: Never
+
+          containers:
+
+            - name: postgres-backup
+
+              image: PROJECT/postgres-backup
+
+              command:
+                - /bin/sh
+                - /backup.sh
+
+              env:
+
+                - name: POSTGRES_HOST
+                  value: postgres-service
+
+                - name: POSTGRES_DB
+                  value: todo_db
+
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: POSTGRES_USER
+
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: POSTGRES_PASSWORD
+
+                - name: BUCKET_NAME
+                  value: todo-backups-dwk
+
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  value: /var/secrets/google/key.json
+
+              volumeMounts:
+
+                - name: storage-key
+                  mountPath: /var/secrets/google
+                  readOnly: true
+
+          volumes:
+
+            - name: storage-key
+              secret:
+
+                secretName: storage-sa-key

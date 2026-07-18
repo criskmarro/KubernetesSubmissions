@@ -10,6 +10,7 @@ resources:
   - todo-app/manifests
   - todo-backend/manifests
   - todo-cronjob/manifests
+  - backup-cronjob/manifests
 
 images:
 
@@ -21,3 +22,6 @@ images:
 
   - name: PROJECT/todo-cronjob
     newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-cronjob
+
+  - name: PROJECT/backup-cronjob
+    newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/backup-cronjob
