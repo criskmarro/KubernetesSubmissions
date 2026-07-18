@@ -160,3 +160,5 @@ Implemented:
 - **3.6 – The project, step 15**
 - **3.7 – The project, step 16**
 - **3.8 – The project, step 17**
+- **3.9 – The project, step 18**
+- **3.10 – The project, step 19**
