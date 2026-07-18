@@ -42,8 +42,11 @@
 - [3.7](https://github.com/criskmarro/KubernetesSubmissions/tree/3.7/the_project)
 - [3.8](https://github.com/criskmarro/KubernetesSubmissions/tree/3.8/the_project)
 - [3.9](https://github.com/criskmarro/KubernetesSubmissions/tree/3.9#39-dbaas-vs-diy)
+- [3.9](https://github.com/criskmarro/KubernetesSubmissions/tree/3.9#39-dbaas-vs-diy)
+- [3.10](https://github.com/criskmarro/KubernetesSubmissions/tree/3.10/the_project)
 
 
+---
 ## 3.9 DBaaS vs DIY
 
 Comparison between using **Google Cloud SQL** (Database as a Service) and a **self-hosted** PostgreSQL solution running inside GKE via `StatefulSet` + `PersistentVolumeClaim`.

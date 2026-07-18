@@ -2,24 +2,24 @@
 
 set -e
 
-export GOOGLE_APPLICATION_CREDENTIALS=/var/secrets/google/key.json
-
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 
 FILE="backup-$TIMESTAMP.sql"
 
 echo "Creating backup..."
 
+export PGPASSWORD=$POSTGRES_PASSWORD
+
 pg_dump \
-    -h $DB_HOST \
-    -U $DB_USER \
-    -d $DB_NAME \
-    > $FILE
+    -h "$POSTGRES_HOST" \
+    -U "$POSTGRES_USER" \
+    -d "$POSTGRES_DB" \
+    > "$FILE"
 
 echo "Uploading..."
 
 gcloud storage cp \
-    $FILE \
-    gs://dwk-gke-502323-backups/
+    "$FILE" \
+    "gs://$BUCKET_NAME/"
 
 echo "Done."
