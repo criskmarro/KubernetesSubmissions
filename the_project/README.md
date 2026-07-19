@@ -208,3 +208,4 @@ Implemented:
 - **3.9 – DBaaS vs DIY**
 - **3.10 – The project, step 19**
 - **3.11 – The project, step 19**
+- **3.12 – The project, step 20**
