@@ -118,6 +118,7 @@ Runs once every 24 hours:
 - Kustomize
 - Google Artifact Registry
 - GitHub Actions CI/CD
+- Resource requests and limits for all workloads
 
 ---
 
@@ -158,6 +159,26 @@ A daily CronJob uploads timestamped SQL backups to a Google Cloud Storage bucket
 
 ---
 
+## Resource Management
+
+The application defines Kubernetes resource requests and limits for all workloads to ensure predictable scheduling and prevent individual containers from consuming excessive cluster resources.
+
+Configured workloads include:
+
+- Todo App
+- Todo Backend
+- PostgreSQL
+- Todo Reminder CronJob
+- PostgreSQL Backup CronJob
+
+Resource usage can be monitored with:
+
+```bash
+kubectl top pods -n project
+```
+
+This configuration provides a good balance between efficient resource utilization and application stability.
+
 ## Kubernetes Resources
 
 - Namespace
@@ -170,6 +191,7 @@ A daily CronJob uploads timestamped SQL backups to a Google Cloud Storage bucket
 - Secrets
 - PersistentVolumeClaims
 - CronJobs
+- Resource requests and limits
 
 ---
 
@@ -183,5 +205,6 @@ Implemented:
 - **3.6 – The project, step 15**
 - **3.7 – The project, step 16**
 - **3.8 – The project, step 17**
-- **3.9 – The project, step 18**
+- **3.9 – DBaaS vs DIY**
 - **3.10 – The project, step 19**
+- **3.11 – The project, step 19**
