@@ -27,6 +27,16 @@ spec:
           envFrom:
             - configMapRef:
                 name: todo-app-config
+                
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+              
           volumeMounts:
             - name: image-storage
               mountPath: /usr/src/app/files

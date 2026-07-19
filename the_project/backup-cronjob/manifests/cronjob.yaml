@@ -53,6 +53,15 @@ spec:
                 - name: GOOGLE_APPLICATION_CREDENTIALS
                   value: /var/secrets/google/key.json
 
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "128Mi"
+
+                limits:
+                  cpu: "400m"
+                  memory: "256Mi"
+
               volumeMounts:
 
                 - name: storage-key
