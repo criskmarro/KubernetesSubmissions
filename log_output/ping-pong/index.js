@@ -81,7 +81,25 @@ app.use(async (ctx) => {
 
     }
 
+    if (ctx.path === "/ready") {
+
+        try {
+            await pool.query("SELECT 1");
+
+            ctx.status = 200;
+            ctx.body = "Ready";
+
+        } catch (err) {
+
+            ctx.status = 503;
+            ctx.body = "Database not available";
+        }
+
+        return;
+    }
+
     ctx.status = 404;
+    ctx.body = "Not Found";
 
 });
 

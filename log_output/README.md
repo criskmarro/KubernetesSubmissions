@@ -69,6 +69,7 @@ The Gateway API uses **URL rewriting**, allowing the Ping Pong application to ex
 - The Ping Pong application stores its counter in a PostgreSQL database running as a StatefulSet with persistent storage.
 - Uses the Kubernetes Gateway API for external HTTP routing.
 - Uses Gateway API URL rewriting so the Ping Pong application can expose its API at `/` while remaining accessible externally through `/pingpong`.
+- Readiness probes for service dependency validation.
 
 ## Kubernetes Resources
 
@@ -80,12 +81,31 @@ The Gateway API uses **URL rewriting**, allowing the Ping Pong application to ex
 - PostgreSQL StatefulSet
 - Headless Service
 - PersistentVolumeClaim (dynamic provisioning)
+- Readiness Probes
 
 Namespace:
 
 ```text
 exercises
 ```
+
+## Deployment
+
+The entire application can be deployed with Kustomize:
+
+```bash
+kubectl apply -k log_output
+```
+
+This deploys:
+
+- ConfigMap
+- PostgreSQL StatefulSet
+- Ping Pong application
+- Log Output application
+- Gateway API resources
+
+into the `exercises` namespace.
 
 ## Exercises
 
@@ -96,3 +116,4 @@ Implemented:
 - **3.2 – Back to Ingress**
 - **3.3 – To the Gateway**
 - **3.4 – Rewritten Routing**
+- **4.1 – Readiness Probe**

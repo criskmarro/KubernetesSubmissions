@@ -59,9 +59,21 @@ async function getPingCount() {
 
 app.use(async (ctx) => {
 
-    if (ctx.path === '/healthz') {
-        ctx.status = 200;
-        ctx.body = 'OK';
+    if (ctx.path === '/ready') {
+
+        try{
+            await axios.get('http://ping-pong-service/ready',
+                {
+                    timeout: 2000
+                }
+            );
+            ctx.status = 200;
+            ctx.body = 'Ready';
+
+        } catch (err) {
+            ctx.status = 503;
+            ctx.body = 'Ping-pong unavailable';
+        }
         return;
     }
 

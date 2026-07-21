@@ -27,30 +27,28 @@ spec:
 
       containers:
         - name: writer
-          image: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/log-writer:GKE
+          image: log-writer
+          imagePullPolicy: Never
         
           volumeMounts:
             - name: shared-log
               mountPath: /usr/src/app/files
 
         - name: reader
-          image: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/log-reader:GKE
+          image: log-reader
+          imagePullPolicy: Never
 
           ports:
             - containerPort: 3000
-            
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 3000
-            initialDelaySeconds: 5
-            periodSeconds: 10
+          
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: /ready
               port: 3000
             initialDelaySeconds: 5
-            periodSeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
 
           env:
             - name: MESSAGE
