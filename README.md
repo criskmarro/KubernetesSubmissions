@@ -45,13 +45,13 @@
 - [3.9](https://github.com/criskmarro/KubernetesSubmissions/tree/3.9#39-dbaas-vs-diy)
 - [3.10](https://github.com/criskmarro/KubernetesSubmissions/tree/3.10/the_project)
 - [3.11](https://github.com/criskmarro/KubernetesSubmissions/tree/3.11/the_project)
-- [3.12](https://github.com/criskmarro/KubernetesSubmissions/tree/3.12/images-3.12)
+- [3.12](https://github.com/criskmarro/KubernetesSubmissions/tree/3.12/images/images-3.12)
 
 ### Chapter 4
 
 - [4.1](https://github.com/criskmarro/KubernetesSubmissions/tree/4.1/log_output)
 - [4.2](https://github.com/criskmarro/KubernetesSubmissions/tree/4.2/the_project)
-- [4.3](https://github.com/criskmarro/KubernetesSubmissions/tree/4.3/image-4.3)
+- [4.3](https://github.com/criskmarro/KubernetesSubmissions/tree/4.3/images/image-4.3/Prometheus.png)
 
 
 
