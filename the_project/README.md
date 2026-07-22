@@ -195,6 +195,19 @@ This configuration provides a good balance between efficient resource utilizatio
 
 ---
 
+### Self-healing
+
+A "Break the app" button is available in the UI for testing.
+
+When pressed:
+
+1. The application intentionally becomes unhealthy.
+2. The liveness probe starts failing.
+3. Kubernetes restarts the Pod.
+4. A new healthy Pod becomes available automatically.
+
+---
+
 ## Exercises
 
 Implemented:
@@ -209,3 +222,4 @@ Implemented:
 - **3.10 – The project, step 19**
 - **3.11 – The project, step 19**
 - **3.12 – The project, step 20**
+- **4.2 – The project, step 21**
