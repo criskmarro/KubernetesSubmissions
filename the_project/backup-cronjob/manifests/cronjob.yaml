@@ -21,7 +21,8 @@ spec:
 
             - name: postgres-backup
 
-              image: PROJECT/postgres-backup
+              image: postgres-backup
+              imagePullPolicy: Never
 
               command:
                 - /bin/sh

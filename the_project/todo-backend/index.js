@@ -16,6 +16,9 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD
 });
 
+let isHealthy = true;
+
+
 async function initializeDatabase() {
 
     await pool.query(`
@@ -41,6 +44,26 @@ app.use(async (ctx, next) => {
 
     console.log(`${ctx.method} ${ctx.url} -> ${ctx.status} (${duration} ms)`);
 
+    if (ctx.path === "/healthz") {
+
+        if (!isHealthy) {
+            ctx.status = 500;
+            ctx.body = "Unhealthy";
+            return;
+        }
+
+        try {
+            await pool.query("SELECT 1");
+        } catch {
+            ctx.status = 500;
+            ctx.body = "Database unavailable";
+            return;
+        }
+
+        ctx.status = 200;
+        ctx.body = "OK";
+        return;
+    }
 });
 
 app.use(bodyParser());
@@ -102,6 +125,14 @@ router.post('/todos', async (ctx) => {
         message: "Todo created"
     };
 
+});
+
+router.post('/break', async (ctx) => {
+    isHealthy = false;
+
+    ctx.body = { status: "broken" };
+
+    return;
 });
 
 app.use(router.routes());

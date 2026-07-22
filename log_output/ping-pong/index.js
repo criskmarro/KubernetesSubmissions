@@ -98,6 +98,8 @@ app.use(async (ctx) => {
         return;
     }
 
+    
+
     ctx.status = 404;
     ctx.body = "Not Found";
 

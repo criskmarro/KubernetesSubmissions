@@ -15,6 +15,7 @@ app.get('/', async (req, res) => {
     await ensureImage();
 
     let todos = [];
+    let backendUnavailable = req.query.broken === '1';
 
     try {
 
@@ -24,6 +25,7 @@ app.get('/', async (req, res) => {
     } catch (err) {
 
         console.error("Unable to fetch todos:", err.message);
+        backendUnavailable = true;
 
     }
 
@@ -127,6 +129,50 @@ button:hover{
 
 }
 
+#break-form{
+
+    margin-top:40px;
+
+}
+
+#break-btn{
+
+    background:#d32f2f;
+
+}
+
+#break-btn:hover{
+
+    background:#a61f1f;
+
+}
+
+.system-failure{
+
+    margin:0 auto 30px;
+    max-width:650px;
+    padding:24px;
+    background:#ffebee;
+    border:3px solid #d32f2f;
+    border-radius:12px;
+    color:#b71c1c;
+
+}
+
+.system-failure h2{
+
+    margin:0 0 10px;
+    font-size:32px;
+
+}
+
+.system-failure p{
+
+    margin:0;
+    font-size:18px;
+
+}
+
 h2{
 
     margin-top:20px;
@@ -190,6 +236,13 @@ li:hover{
 
 <h1>TODO APP</h1>
 
+${backendUnavailable ? `
+<section class="system-failure" role="alert">
+<h2>System Failure</h2>
+<p>The todo app is currently unhealthy. Please wait for recovery.</p>
+</section>
+` : ''}
+
 <img src="/image">
 
 <form action="/todo" method="POST">
@@ -218,6 +271,14 @@ ${todoList}
 </ul>
 
 </div>
+
+<form id="break-form" action="/break" method="POST">
+
+<button id="break-btn">
+    break the app
+</button>
+
+</form>
 
 <div class="footer-space"></div>
 
@@ -253,6 +314,22 @@ app.post('/todo', async (req, res) => {
     }
 
     res.redirect('/');
+
+});
+
+app.post('/break', async (req, res) => {
+
+    try {
+
+        await axios.post(`${BACKEND_URL}/break`);
+
+    } catch (err) {
+
+        console.error("Unable to break backend:", err.message);
+
+    }
+
+    res.redirect('/?broken=1');
 
 });
 

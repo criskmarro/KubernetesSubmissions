@@ -21,7 +21,8 @@ spec:
             claimName: todo-images-claim
       containers:
         - name: todo-app
-          image: PROJECT/todo-app
+          image: todo-app
+          imagePullPolicy: Never
           ports:
             - containerPort: 8080
           envFrom:

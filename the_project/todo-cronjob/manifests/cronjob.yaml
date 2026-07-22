@@ -24,7 +24,8 @@ spec:
           containers:
 
           - name: todo-reminder
-            image: PROJECT/todo-cronjob
+            image: todo-reminder
+            imagePullPolicy: Never
 
             env:
 

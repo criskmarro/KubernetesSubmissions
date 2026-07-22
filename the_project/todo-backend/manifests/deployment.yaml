@@ -22,11 +22,28 @@ spec:
 
       - name: todo-backend
 
-        image: PROJECT/todo-backend
+        image: todo-backend
+        imagePullPolicy: Never
 
         ports:
 
         - containerPort: 3000
+
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
 
         envFrom:
 
