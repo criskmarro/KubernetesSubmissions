@@ -30,7 +30,23 @@ app.get('/', async (req, res) => {
     }
 
     const todoList = todos
-        .map(todo => `<li>${todo}</li>`)
+        .map(todo => `
+    <li class="todo">
+
+        <span class="${todo.done ? "done" : ""}">
+            ${todo.text}
+        </span>
+
+        ${
+            todo.done
+            ? "<span>Done</span>"
+            : `<button onclick="markDone(${todo.id})">
+                    Mark done
+               </button>`
+        }
+
+    </li>
+    `)
         .join('');
 
     res.send(`
@@ -180,6 +196,19 @@ h2{
 
 }
 
+.todo{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:15px;
+    margin:10px 0;
+
+    background:#f4f4f4;
+
+}
+
 .todo-container{
 
     width:650px;
@@ -189,6 +218,13 @@ h2{
     border-radius:12px;
     box-shadow:0 6px 16px rgba(0,0,0,.12);
     padding:20px;
+
+}
+
+.done{
+
+    text-decoration:line-through;
+    color:gray;
 
 }
 
@@ -346,3 +382,13 @@ app.listen(PORT, () => {
     console.log(`Todo App listening on port ${PORT}`);
 
 });
+
+async function markDone(id) {
+
+    await axios.put(
+        `${BACKEND_URL}/todos/${id}`
+    );
+
+    loadTodos();
+
+}

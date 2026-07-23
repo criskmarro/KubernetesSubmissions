@@ -24,7 +24,8 @@ async function initializeDatabase() {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS todos (
             id SERIAL PRIMARY KEY,
-            text VARCHAR(140) NOT NULL
+            text VARCHAR(140) NOT NULL,
+            done BOOLEAN NOT NULL DEFAULT FALSE
         );
     `);
 
@@ -44,26 +45,6 @@ app.use(async (ctx, next) => {
 
     console.log(`${ctx.method} ${ctx.url} -> ${ctx.status} (${duration} ms)`);
 
-    if (ctx.path === "/healthz") {
-
-        if (!isHealthy) {
-            ctx.status = 500;
-            ctx.body = "Unhealthy";
-            return;
-        }
-
-        try {
-            await pool.query("SELECT 1");
-        } catch {
-            ctx.status = 500;
-            ctx.body = "Database unavailable";
-            return;
-        }
-
-        ctx.status = 200;
-        ctx.body = "OK";
-        return;
-    }
 });
 
 app.use(bodyParser());
@@ -73,10 +54,10 @@ router.get('/todos', async (ctx) => {
     console.log("Fetching todos");
 
     const result = await pool.query(
-        'SELECT text FROM todos ORDER BY id'
+        "SELECT id, text, done FROM todos ORDER BY id;"
     );
 
-    ctx.body = result.rows.map(row => row.text);
+    ctx.body = result.rows;
 
 });
 
@@ -135,22 +116,56 @@ router.post('/break', async (ctx) => {
     return;
 });
 
+router.put("/todos/:id", async (ctx) => {
+
+    const id = ctx.params.id;
+
+    await pool.query(
+        `
+        UPDATE todos
+        SET done = TRUE
+        WHERE id = $1;
+        `,
+        [id]
+    );
+
+    ctx.status = 204;
+
+});
+
+router.get('/healthz', async (ctx) => {
+    if (!isHealthy) {
+        ctx.status = 500;
+        ctx.body = "Unhealthy";
+        return;
+    }
+
+    try {
+        await pool.query("SELECT 1");
+        ctx.status = 200;
+        ctx.body = "OK";
+    } catch {
+        ctx.status = 500;
+        ctx.body = "Database unavailable";
+    }
+});
+
 app.use(router.routes());
 
 app.use(router.allowedMethods());
 
 initializeDatabase()
-.then(() => {
+    .then(() => {
 
-    app.listen(PORT, () => {
+        app.listen(PORT, () => {
 
-        console.log(`Todo Backend running on port ${PORT}`);
+            console.log(`Todo Backend running on port ${PORT}`);
+
+        });
+
+    })
+    .catch(err => {
+
+        console.error(err);
 
     });
-
-})
-.catch(err => {
-
-    console.error(err);
-
-});
