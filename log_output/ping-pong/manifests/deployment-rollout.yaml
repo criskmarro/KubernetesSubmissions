@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+
+metadata:
+  namespace: exercises
+  name: ping-pong-deployment
+
+spec:
+  replicas: 4
+
+  strategy:
+    canary:
+      steps:
+        - setWeight: 50
+        - analysis:
+            templates:
+              - templateName: pingpong-cpu-analysis
+
+  selector:
+    matchLabels:
+      app: ping-pong
+
+  template:
+    metadata:
+      labels:
+        app: ping-pong
+
+    spec:
+      containers:
+      - name: ping-pong
+        image: ping-pong:v4
+        imagePullPolicy: Never
+
+        ports:
+          - containerPort: 3001
+
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        env:
+
+        - name: POSTGRES_HOST
+          value: postgres
+
+        - name: POSTGRES_PORT
+          value: "5432"
+
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-config
+              key: POSTGRES_DB
+
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-config
+              key: POSTGRES_USER
+
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD

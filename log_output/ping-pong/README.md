@@ -29,20 +29,22 @@ Because the counter is stored in PostgreSQL, the value survives Pod restarts.
 ## Architecture
 
 ```text
-Internet
-    │
-    ▼
-LoadBalancer Service
-    │
-    ▼
-Ping Pong Deployment
-    │
-    ▼
+Gateway API
+     │
+     ▼
+HTTPRoute
+     │
+     ▼
+Argo Rollout (Canary)
+     │
+     ▼
+Ping Pong Pods
+     │
+     ▼
 PostgreSQL Service
-    │
-    ▼
+     │
+     ▼
 PostgreSQL StatefulSet
-```
 
 ---
 
@@ -57,6 +59,8 @@ The deployment uses:
 - PostgreSQL Service
 - ConfigMap
 - Secret
+- Rollout (Argo Rollouts)
+- AnalysisTemplate
 
 ---
 
@@ -116,6 +120,9 @@ http://<EXTERNAL-IP>/pingpong
 
 ## Exercise
 
-Implements:
+Implemented:
 
 - **3.1 – Ping Pong GKE**
+- **4.1 – Readiness Probes**
+- **4.2 – Liveness Probes**
+- **4.4 – Canary Deployment with Argo Rollouts**
