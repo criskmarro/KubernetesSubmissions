@@ -29,25 +29,29 @@ app.get('/', async (req, res) => {
 
     }
 
-    const todoList = todos
-        .map(todo => `
-    <li class="todo">
+    let todoList = '';
 
-        <span class="${todo.done ? "done" : ""}">
+    todos.forEach(todo => {
+        todoList += `
+    <div class="todo ${todo.done ? "done" : ""}">
+
+        <span class="todo-text ${todo.done ? "done" : ""}">
             ${todo.text}
         </span>
 
         ${
             todo.done
-            ? "<span>Done</span>"
-            : `<button onclick="markDone(${todo.id})">
-                    Mark done
-               </button>`
+            ? "<span class=\"done-label\">Done</span>"
+            : `
+                <form class="done-form" action="/todo/${todo.id}/done" method="POST">
+                    <button type="submit">Mark done</button>
+                </form>
+              `
         }
 
-    </li>
-    `)
-        .join('');
+    </div>
+    `;
+    });
 
     res.send(`
 <!DOCTYPE html>
@@ -125,24 +129,17 @@ input:focus{
 
 }
 
-button{
-
-    padding:14px 24px;
-    background:#4CAF50;
-    color:white;
-    border:none;
-    border-radius:8px;
-    font-size:16px;
-    cursor:pointer;
-    transition:.2s;
-
+button {
+    background: #1976d2;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
-button:hover{
-
-    background:#3d9140;
-    transform:translateY(-1px);
-
+button:hover {
+    background: #1565c0;
 }
 
 #break-form{
@@ -196,18 +193,20 @@ h2{
 
 }
 
-.todo{
+.todo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+    padding: 15px 20px;
+    margin: 12px 0;
 
-    padding:15px;
-    margin:10px 0;
-
-    background:#f4f4f4;
-
+    background: #f5f5f5;
+    border-left: 5px solid #4CAF50;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
 }
+
 
 .todo-container{
 
@@ -221,11 +220,31 @@ h2{
 
 }
 
+.todo.done {
+    opacity: .6;
+    border-left-color: #999;
+}
+
+.todo-text.done {
+    text-decoration: line-through;
+    color: #666;
+}
+
+.todo .done-form {
+    display: block;
+    margin: 0;
+}
+
 .done{
 
     text-decoration:line-through;
     color:gray;
 
+}
+
+.done-label {
+    color: #2e7d32;
+    font-weight: bold;
 }
 
 ul{
@@ -300,15 +319,15 @@ Send
 
 <div class="todo-container">
 
-<ul>
+<div class="todo-list">
 
 ${todoList}
 
-</ul>
+</div>
 
 </div>
 
-<form id="break-form" action="/break" method="POST">
+<form id="break-form" action="/break" method="POST" data-scroll-top>
 
 <button id="break-btn">
     break the app
@@ -319,6 +338,27 @@ ${todoList}
 <div class="footer-space"></div>
 
 </div>
+
+<script>
+const scrollPositionKey = 'todo-app-scroll-position';
+const savedScrollPosition = sessionStorage.getItem(scrollPositionKey);
+
+if (savedScrollPosition !== null) {
+    sessionStorage.removeItem(scrollPositionKey);
+    window.scrollTo(0, Number(savedScrollPosition));
+}
+
+document.querySelectorAll('form').forEach((form) => {
+    form.addEventListener('submit', () => {
+        if (form.dataset.scrollTop !== undefined) {
+            sessionStorage.removeItem(scrollPositionKey);
+            return;
+        }
+
+        sessionStorage.setItem(scrollPositionKey, String(window.scrollY));
+    });
+});
+</script>
 
 </body>
 
@@ -346,6 +386,22 @@ app.post('/todo', async (req, res) => {
     } catch (err) {
 
         console.error("Unable to save todo:", err.message);
+
+    }
+
+    res.redirect('/');
+
+});
+
+app.post('/todo/:id/done', async (req, res) => {
+
+    try {
+
+        await axios.put(`${BACKEND_URL}/todos/${req.params.id}`);
+
+    } catch (err) {
+
+        console.error("Unable to mark todo as done:", err.message);
 
     }
 
@@ -382,13 +438,3 @@ app.listen(PORT, () => {
     console.log(`Todo App listening on port ${PORT}`);
 
 });
-
-async function markDone(id) {
-
-    await axios.put(
-        `${BACKEND_URL}/todos/${id}`
-    );
-
-    loadTodos();
-
-}

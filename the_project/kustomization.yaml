@@ -12,16 +12,16 @@ resources:
   - todo-cronjob/manifests
   - backup-cronjob/manifests
 
-images:
-
-  - name: PROJECT/todo-app
-    newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-app
-
-  - name: PROJECT/todo-backend
-    newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-backend
-
-  - name: PROJECT/todo-cronjob
-    newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-cronjob
-
-  - name: PROJECT/backup-cronjob
-    newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/backup-cronjob
+## images:
+##
+##  - name: PROJECT/todo-app
+##    newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-app
+##
+##  - name: PROJECT/todo-backend
+##    newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-backend
+##
+##  - name: PROJECT/todo-cronjob
+##    newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/todo-cronjob
+##
+##  - name: PROJECT/backup-cronjob
+##    newName: us-east1-docker.pkg.dev/dwk-gke-502323/kubernetes/backup-cronjob

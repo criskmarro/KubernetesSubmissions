@@ -6,9 +6,11 @@ This project is part of the **DevOps with Kubernetes** course.
 
 The application consists of independent frontend and backend services communicating over HTTP inside a Kubernetes cluster.
 
-The frontend serves the user interface and cached image, while the backend exposes a REST API for managing todos stored in a PostgreSQL database.
+The frontend serves a server-side rendered user interface with a cached image, while the backend exposes a REST API for managing todos stored in a PostgreSQL database.
 
-The application is deployed to **Google Kubernetes Engine (GKE)** using **Gateway API**, **Kustomize**, **Google Artifact Registry**, and **GitHub Actions**.
+The application demonstrates production-oriented Kubernetes features including persistent storage, health probes, self-healing, scheduled jobs, resource management, continuous deployment, and canary-ready infrastructure.
+
+The production deployment targets **Google Kubernetes Engine (GKE)** using **Gateway API**, **Kustomize**, **Google Artifact Registry**, and **GitHub Actions**.
 
 ---
 
@@ -25,6 +27,7 @@ The application is deployed to **Google Kubernetes Engine (GKE)** using **Gatewa
                ┌────────────────────────────┐
                │ Server-side rendered HTML  │
                │ Cached Lorem Picsum image  │
+               │ Todo management UI         │
                │ HTTP client                │
                └──────────────┬─────────────┘
                               │
@@ -33,6 +36,7 @@ The application is deployed to **Google Kubernetes Engine (GKE)** using **Gatewa
                ┌────────────────────────────┐
                │ GET /todos                 │
                │ POST /todos                │
+               │ PUT /todos/:id             │
                │ PostgreSQL client          │
                └──────────────┬─────────────┘
                               │
@@ -61,6 +65,7 @@ The application is deployed to **Google Kubernetes Engine (GKE)** using **Gatewa
 - Server-side rendered HTML
 - Cached Lorem Picsum image
 - Axios HTTP client
+- Mark todos as completed
 - Image cache stored on a PersistentVolumeClaim
 
 ### Todo Backend
@@ -72,6 +77,7 @@ The application is deployed to **Google Kubernetes Engine (GKE)** using **Gatewa
 - 140-character validation
 - GET /todos
 - POST /todos
+- PUT /todos/:id
 
 ### PostgreSQL
 
@@ -98,7 +104,7 @@ Runs once every 24 hours:
 
 - Executes `pg_dump`
 - Creates a timestamped SQL backup
-- Uploads the backup to a Google Cloud Storage bucket
+- Uploads the backup to a Google Cloud Storage bucket.
 
 ---
 
@@ -109,16 +115,20 @@ Runs once every 24 hours:
 - PostgreSQL StatefulSet
 - Persistent image cache
 - Persistent database storage
+- Todo completion
 - Daily PostgreSQL backups
 - Hourly reminder CronJob
 - Google Cloud Storage integration
 - ConfigMaps
 - Secrets
 - PersistentVolumeClaims
+- Readiness probes
+- Liveness probes
+- Automatic self-healing
 - Kustomize
 - Google Artifact Registry
 - GitHub Actions CI/CD
-- Resource requests and limits for all workloads
+- Resource requests and limits
 
 ---
 
@@ -177,7 +187,52 @@ Resource usage can be monitored with:
 kubectl top pods -n project
 ```
 
-This configuration provides a good balance between efficient resource utilization and application stability.
+---
+
+## Health Checks
+
+The application uses Kubernetes health probes.
+
+### Readiness Probe
+
+Traffic is sent only to Pods that:
+
+- are fully initialized;
+- have database connectivity;
+- are ready to serve requests.
+
+### Liveness Probe
+
+The application continuously verifies that it is healthy.
+
+If the health endpoint fails, Kubernetes automatically restarts the Pod.
+
+---
+
+## Self-healing
+
+A **Break the app** button is available in the UI for testing Kubernetes recovery.
+
+When pressed:
+
+1. The application intentionally becomes unhealthy.
+2. The liveness probe starts failing.
+3. Kubernetes restarts the affected Pod.
+4. A new healthy Pod replaces it automatically.
+
+---
+
+## Todo Management
+
+The application supports:
+
+- creating todos;
+- listing todos;
+- marking todos as completed.
+
+Completed todos are visually distinguished in the UI using a strikethrough effect and a **Done** indicator.
+
+---
 
 ## Kubernetes Resources
 
@@ -192,19 +247,8 @@ This configuration provides a good balance between efficient resource utilizatio
 - PersistentVolumeClaims
 - CronJobs
 - Resource requests and limits
-
----
-
-### Self-healing
-
-A "Break the app" button is available in the UI for testing.
-
-When pressed:
-
-1. The application intentionally becomes unhealthy.
-2. The liveness probe starts failing.
-3. Kubernetes restarts the Pod.
-4. A new healthy Pod becomes available automatically.
+- Readiness Probes
+- Liveness Probes
 
 ---
 
@@ -220,6 +264,7 @@ Implemented:
 - **3.8 – The project, step 17**
 - **3.9 – DBaaS vs DIY**
 - **3.10 – The project, step 19**
-- **3.11 – The project, step 19**
+- **3.11 – Resource Management**
 - **3.12 – The project, step 20**
 - **4.2 – The project, step 21**
+- **4.5 – The project, step 22**
