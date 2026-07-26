@@ -9,3 +9,4 @@ data:
   DB_HOST: postgres-service
   DB_PORT: "5432"
   DB_NAME: todo_db
+  NATS_URL: nats://nats-service:4222

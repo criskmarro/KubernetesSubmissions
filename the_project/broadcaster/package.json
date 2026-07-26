@@ -1,0 +1,12 @@
+{
+  "name": "todo-broadcaster",
+  "version": "1.0.0",
+  "description": "Forwards todo status events from NATS to a generic webhook",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@nats-io/transport-node": "^3.1.0"
+  }
+}

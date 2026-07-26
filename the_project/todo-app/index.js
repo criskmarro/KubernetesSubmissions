@@ -16,6 +16,8 @@ app.get('/', async (req, res) => {
 
     let todos = [];
     let backendUnavailable = req.query.broken === '1';
+    const todoUpdated = req.query.updated === '1';
+    const todoUpdateFailed = req.query.updateError === '1';
 
     try {
 
@@ -186,6 +188,26 @@ button:hover {
 
 }
 
+.status-message {
+    max-width: 650px;
+    margin: 0 auto 20px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.status-message.success {
+    background: #e8f5e9;
+    color: #1b5e20;
+    border: 1px solid #4caf50;
+}
+
+.status-message.error {
+    background: #ffebee;
+    color: #b71c1c;
+    border: 1px solid #d32f2f;
+}
+
 h2{
 
     margin-top:20px;
@@ -292,11 +314,14 @@ li:hover{
 <h1>TODO APP</h1>
 
 ${backendUnavailable ? `
-<section class="system-failure" role="alert">
+<section id="system-failure" class="system-failure" role="alert" tabindex="-1">
 <h2>System Failure</h2>
 <p>The todo app is currently unhealthy. Please wait for recovery.</p>
 </section>
 ` : ''}
+
+${todoUpdated ? '<p class="status-message success" role="status">Todo marked as completed.</p>' : ''}
+${todoUpdateFailed ? '<p class="status-message error" role="alert">Unable to mark the todo as completed.</p>' : ''}
 
 <img src="/image">
 
@@ -342,8 +367,15 @@ ${todoList}
 <script>
 const scrollPositionKey = 'todo-app-scroll-position';
 const savedScrollPosition = sessionStorage.getItem(scrollPositionKey);
+const failureAlert = document.getElementById('system-failure');
 
-if (savedScrollPosition !== null) {
+if (failureAlert) {
+    sessionStorage.removeItem(scrollPositionKey);
+    requestAnimationFrame(() => {
+        failureAlert.scrollIntoView({ block: 'center' });
+        failureAlert.focus({ preventScroll: true });
+    });
+} else if (savedScrollPosition !== null) {
     sessionStorage.removeItem(scrollPositionKey);
     window.scrollTo(0, Number(savedScrollPosition));
 }
@@ -402,10 +434,11 @@ app.post('/todo/:id/done', async (req, res) => {
     } catch (err) {
 
         console.error("Unable to mark todo as done:", err.message);
+        return res.redirect('/?updateError=1');
 
     }
 
-    res.redirect('/');
+    res.redirect('/?updated=1');
 
 });
 

@@ -4,11 +4,13 @@ This project is part of the **DevOps with Kubernetes** course.
 
 ## Description
 
-The application consists of independent frontend and backend services communicating over HTTP inside a Kubernetes cluster.
+The application consists of independent frontend and backend services communicating inside a Kubernetes cluster.
 
 The frontend serves a server-side rendered user interface with a cached image, while the backend exposes a REST API for managing todos stored in a PostgreSQL database.
 
-The application demonstrates production-oriented Kubernetes features including persistent storage, health probes, self-healing, scheduled jobs, resource management, continuous deployment, and canary-ready infrastructure.
+Besides the traditional HTTP communication, the application also follows an event-driven architecture using **NATS**. Whenever a todo is created or completed, the backend publishes an event that is consumed by an independent broadcaster service responsible for forwarding notifications to an external webhook.
+
+The application demonstrates production-oriented Kubernetes features including persistent storage, health probes, self-healing, messaging, scheduled jobs, resource management, continuous deployment, and canary deployments.
 
 The production deployment targets **Google Kubernetes Engine (GKE)** using **Gateway API**, **Kustomize**, **Google Artifact Registry**, and **GitHub Actions**.
 
@@ -17,49 +19,52 @@ The production deployment targets **Google Kubernetes Engine (GKE)** using **Gat
 ## Architecture
 
 ```text
-                           Browser
-                              │
-                              ▼
-                    Gateway API (GKE)
-                              │
-                              ▼
-                     Todo App (Frontend)
-               ┌────────────────────────────┐
-               │ Server-side rendered HTML  │
-               │ Cached Lorem Picsum image  │
-               │ Todo management UI         │
-               │ HTTP client                │
-               └──────────────┬─────────────┘
-                              │
-                              ▼
-                     Todo Backend API
-               ┌────────────────────────────┐
-               │ GET /todos                 │
-               │ POST /todos                │
-               │ PUT /todos/:id             │
-               │ PostgreSQL client          │
-               └──────────────┬─────────────┘
-                              │
-                              ▼
-                     PostgreSQL StatefulSet
-                              │
-                              ▼
-                       Persistent Storage
+                               Browser
+                                  │
+                                  ▼
+                        Gateway API (GKE)
+                                  │
+                                  ▼
+                       Todo App (Frontend)
+                 ┌────────────────────────────┐
+                 │ Server-side rendered HTML  │
+                 │ Cached Lorem Picsum image  │
+                 │ Todo management UI         │
+                 └──────────────┬─────────────┘
+                                │
+                                ▼
+                       Todo Backend API
+                 ┌────────────────────────────┐
+                 │ GET /todos                 │
+                 │ POST /todos                │
+                 │ PUT /todos/:id             │
+                 └──────────────┬─────────────┘
+                                │
+             ┌──────────────────┴──────────────────┐
+             │                                     │
+             ▼                                     ▼
+      PostgreSQL StatefulSet                 NATS Messaging
+             │                                     │
+             │                                     ▼
+             │                           Broadcaster Service
+             │                                     │
+             ▼                                     ▼
+      Persistent Storage                 Generic Webhook / Chat Service
 
-         Hourly CronJob                 Daily Backup CronJob
-               │                               │
-               ▼                               ▼
-      Random Wikipedia Page             pg_dump Database
-               │                               │
-               ▼                               ▼
-       Create Reading Todo           Google Cloud Storage
+      Hourly CronJob                     Daily Backup CronJob
+             │                                   │
+             ▼                                   ▼
+     Random Wikipedia Page                 pg_dump Database
+             │                                   │
+             ▼                                   ▼
+      Create Reading Todo             Google Cloud Storage
 ```
 
 ---
 
-## Components
+# Components
 
-### Todo App
+## Todo App
 
 - Express server
 - Server-side rendered HTML
@@ -68,7 +73,7 @@ The production deployment targets **Google Kubernetes Engine (GKE)** using **Gat
 - Mark todos as completed
 - Image cache stored on a PersistentVolumeClaim
 
-### Todo Backend
+## Todo Backend
 
 - Koa REST API
 - PostgreSQL client
@@ -78,40 +83,96 @@ The production deployment targets **Google Kubernetes Engine (GKE)** using **Gat
 - GET /todos
 - POST /todos
 - PUT /todos/:id
+- Publishes NATS events after successful database updates
 
-### PostgreSQL
+Published events:
+
+- `todo.created`
+- `todo.completed`
+
+---
+
+## Broadcaster
+
+The broadcaster is an independent microservice responsible for forwarding todo events to external services.
+
+Features:
+
+- Subscribes to NATS queue subscriptions
+- Receives todo lifecycle events
+- Sends webhook notifications
+- Horizontally scalable
+- Queue-based message consumption avoids duplicate notifications
+
+Current deployment:
+
+- 6 replicas
+
+Using a NATS queue group guarantees that every event is processed exactly once by a single broadcaster replica.
+
+Example webhook payload:
+
+```json
+{
+  "user": "todo-bot",
+  "message": "Todo completed: Learn Kubernetes"
+}
+```
+
+The webhook endpoint is configured through the `WEBHOOK_URL` environment variable.
+
+---
+
+## NATS
+
+Used as the internal messaging system.
+
+Responsibilities:
+
+- Decouples services
+- Event-driven communication
+- Queue subscriptions
+- Horizontal scalability
+- At-most-once delivery (Core NATS)
+
+---
+
+## PostgreSQL
 
 - StatefulSet
 - Headless Service
 - Persistent storage
-- Configured through ConfigMap and Secret
-
-### Todo Reminder CronJob
-
-Runs every hour:
-
-1. Requests a random Wikipedia article.
-2. Reads the redirected URL.
-3. Creates a new todo:
-
-```
-Read https://en.wikipedia.org/wiki/...
-```
-
-### PostgreSQL Backup CronJob
-
-Runs once every 24 hours:
-
-- Executes `pg_dump`
-- Creates a timestamped SQL backup
-- Uploads the backup to a Google Cloud Storage bucket.
+- ConfigMap + Secret configuration
 
 ---
 
-## Features
+## Todo Reminder CronJob
+
+Runs every hour.
+
+1. Fetches a random Wikipedia article.
+2. Creates a reading reminder todo.
+
+---
+
+## PostgreSQL Backup CronJob
+
+Runs every 24 hours.
+
+- Executes pg_dump
+- Uploads timestamped backups to Google Cloud Storage.
+
+---
+
+# Features
 
 - Gateway API
 - REST API
+- Event-driven architecture
+- NATS messaging
+- Queue subscriptions
+- Horizontally scalable broadcaster
+- Webhook notifications
 - PostgreSQL StatefulSet
 - Persistent image cache
 - Persistent database storage
@@ -125,6 +186,7 @@ Runs once every 24 hours:
 - Readiness probes
 - Liveness probes
 - Automatic self-healing
+- Canary deployments
 - Kustomize
 - Google Artifact Registry
 - GitHub Actions CI/CD
@@ -132,7 +194,7 @@ Runs once every 24 hours:
 
 ---
 
-## Continuous Deployment
+# Continuous Deployment
 
 GitHub Actions automatically:
 
@@ -142,46 +204,43 @@ GitHub Actions automatically:
 - Deploys to Google Kubernetes Engine
 - Waits for successful rollouts
 - Deploys the `main` branch to the `project` namespace
-- Creates isolated namespaces for feature branches
-- Automatically deletes preview environments when branches are removed
+- Creates preview environments for feature branches
+- Cleans up preview environments automatically
 
 ---
 
-## Storage
+# Storage
 
-### Image Cache
+## Image Cache
 
-The frontend stores downloaded images inside a PersistentVolumeClaim.
+Images are stored inside a PersistentVolumeClaim.
 
 ```
 todo-images-claim
 ```
 
-This allows cached images to survive Pod restarts.
+## Database
 
-### Database
+Todos are stored inside PostgreSQL using persistent storage.
 
-PostgreSQL stores all todos on a persistent volume managed by Kubernetes.
+## Backups
 
-### Backups
-
-A daily CronJob uploads timestamped SQL backups to a Google Cloud Storage bucket.
+Daily PostgreSQL backups are uploaded to Google Cloud Storage.
 
 ---
 
-## Resource Management
+# Resource Management
 
-The application defines Kubernetes resource requests and limits for all workloads to ensure predictable scheduling and prevent individual containers from consuming excessive cluster resources.
-
-Configured workloads include:
+Resource requests and limits are configured for:
 
 - Todo App
 - Todo Backend
+- Broadcaster
 - PostgreSQL
 - Todo Reminder CronJob
 - PostgreSQL Backup CronJob
 
-Resource usage can be monitored with:
+Monitor usage with:
 
 ```bash
 kubectl top pods -n project
@@ -189,52 +248,54 @@ kubectl top pods -n project
 
 ---
 
-## Health Checks
+# Health Checks
 
-The application uses Kubernetes health probes.
+The application implements Kubernetes health probes.
 
-### Readiness Probe
+## Readiness Probe
 
-Traffic is sent only to Pods that:
+Pods receive traffic only when:
 
-- are fully initialized;
-- have database connectivity;
-- are ready to serve requests.
+- initialized;
+- connected to PostgreSQL;
+- ready to process requests.
 
-### Liveness Probe
+## Liveness Probe
 
-The application continuously verifies that it is healthy.
-
-If the health endpoint fails, Kubernetes automatically restarts the Pod.
+Automatically restarts unhealthy Pods.
 
 ---
 
-## Self-healing
+# Self-healing
 
-A **Break the app** button is available in the UI for testing Kubernetes recovery.
+The UI includes a **Break the app** button.
 
-When pressed:
+When triggered:
 
-1. The application intentionally becomes unhealthy.
-2. The liveness probe starts failing.
-3. Kubernetes restarts the affected Pod.
-4. A new healthy Pod replaces it automatically.
-
----
-
-## Todo Management
-
-The application supports:
-
-- creating todos;
-- listing todos;
-- marking todos as completed.
-
-Completed todos are visually distinguished in the UI using a strikethrough effect and a **Done** indicator.
+1. The application reports itself as unhealthy.
+2. The liveness probe fails.
+3. Kubernetes restarts the Pod.
+4. Traffic is restored automatically.
 
 ---
 
-## Kubernetes Resources
+# Todo Management
+
+Supported operations:
+
+- Create todos
+- List todos
+- Mark todos as completed
+
+Completed todos are displayed with:
+
+- strikethrough text
+- reduced opacity
+- Done badge
+
+---
+
+# Kubernetes Resources
 
 - Namespace
 - Gateway
@@ -246,13 +307,14 @@ Completed todos are visually distinguished in the UI using a strikethrough effec
 - Secrets
 - PersistentVolumeClaims
 - CronJobs
+- NATS
 - Resource requests and limits
 - Readiness Probes
 - Liveness Probes
 
 ---
 
-## Exercises
+# Exercises
 
 Implemented:
 
@@ -268,3 +330,4 @@ Implemented:
 - **3.12 – The project, step 20**
 - **4.2 – The project, step 21**
 - **4.5 – The project, step 22**
+- **4.6 – The project, step 23**

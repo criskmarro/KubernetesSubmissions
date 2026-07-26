@@ -2,6 +2,7 @@ const Koa = require('koa');
 const Router = require('@koa/router');
 const bodyParser = require('koa-bodyparser');
 const { Pool } = require('pg');
+const { connect } = require('@nats-io/transport-node');
 
 const app = new Koa();
 const router = new Router();
@@ -17,6 +18,12 @@ const pool = new Pool({
 });
 
 let isHealthy = true;
+let isNatsHealthy = false;
+let natsConnection;
+
+const natsEncoder = new TextEncoder();
+const NATS_URL = process.env.NATS_URL || 'nats://nats-service:4222';
+const TODO_STATUS_SUBJECT = 'todos.status';
 
 
 async function initializeDatabase() {
@@ -30,6 +37,55 @@ async function initializeDatabase() {
     `);
 
     console.log("Database initialized");
+
+}
+
+async function connectToNats() {
+
+    natsConnection = await connect({ servers: NATS_URL });
+    isNatsHealthy = true;
+
+    console.log(`Connected to NATS at ${NATS_URL}`);
+
+    (async () => {
+        for await (const status of natsConnection.status()) {
+            if (status.type === 'disconnect') {
+                isNatsHealthy = false;
+            }
+
+            if (status.type === 'reconnect') {
+                isNatsHealthy = true;
+            }
+        }
+    })().catch(err => console.error('NATS status monitor failed:', err.message));
+
+    natsConnection.closed().then((err) => {
+        isNatsHealthy = false;
+        console.error('NATS connection closed:', err ? err.message : 'closed');
+    });
+
+}
+
+function publishTodoStatus(type, todo) {
+
+    if (!isNatsHealthy) {
+        // Todo updates must still succeed when NATS is temporarily unavailable.
+        // Core NATS is at-most-once, so skipping an unavailable publish avoids retries
+        // that could result in duplicate chat messages.
+        console.warn(`NATS unavailable; skipped ${type} for todo ${todo.id}`);
+        return;
+    }
+
+    try {
+        natsConnection.publish(
+            TODO_STATUS_SUBJECT,
+            natsEncoder.encode(JSON.stringify({ type, todo }))
+        );
+
+        console.log(`Published ${type} for todo ${todo.id}`);
+    } catch (err) {
+        console.error(`Unable to publish ${type} for todo ${todo.id}:`, err.message);
+    }
 
 }
 
@@ -95,10 +151,12 @@ router.post('/todos', async (ctx) => {
 
     console.log(`Creating todo: ${text}`);
 
-    await pool.query(
-        'INSERT INTO todos(text) VALUES($1)',
+    const result = await pool.query(
+        'INSERT INTO todos(text) VALUES($1) RETURNING id, text, done',
         [text]
     );
+
+    publishTodoStatus('todo.created', result.rows[0]);
 
     ctx.status = 201;
 
@@ -120,21 +178,30 @@ router.put("/todos/:id", async (ctx) => {
 
     const id = ctx.params.id;
 
-    await pool.query(
+    const result = await pool.query(
         `
         UPDATE todos
         SET done = TRUE
-        WHERE id = $1;
+        WHERE id = $1
+        RETURNING id, text, done
         `,
         [id]
     );
+
+    if (result.rowCount === 0) {
+        ctx.status = 404;
+        ctx.body = { error: 'Todo not found' };
+        return;
+    }
+
+    publishTodoStatus('todo.completed', result.rows[0]);
 
     ctx.status = 204;
 
 });
 
 router.get('/healthz', async (ctx) => {
-    if (!isHealthy) {
+    if (!isHealthy || !isNatsHealthy) {
         ctx.status = 500;
         ctx.body = "Unhealthy";
         return;
@@ -154,7 +221,7 @@ app.use(router.routes());
 
 app.use(router.allowedMethods());
 
-initializeDatabase()
+Promise.all([initializeDatabase(), connectToNats()])
     .then(() => {
 
         app.listen(PORT, () => {
@@ -167,5 +234,6 @@ initializeDatabase()
     .catch(err => {
 
         console.error(err);
+        process.exit(1);
 
     });

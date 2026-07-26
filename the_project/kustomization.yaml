@@ -9,6 +9,8 @@ resources:
   - postgres
   - todo-app/manifests
   - todo-backend/manifests
+  - nats/manifests
+  - broadcaster/manifests
   - todo-cronjob/manifests
   - backup-cronjob/manifests
 
