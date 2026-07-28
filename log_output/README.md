@@ -129,3 +129,4 @@ Implemented:
 - **3.3 – To the Gateway**
 - **3.4 – Rewritten Routing**
 - **4.1 – Readiness Probe**
+- **4.7. Baby steps to GitOps**
