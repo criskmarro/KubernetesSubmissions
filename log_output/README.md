@@ -107,6 +107,16 @@ This deploys:
 
 into the `exercises` namespace.
 
+## GitOps deployment
+
+Argo CD manages this application from the `main` branch. Apply the application definition once after Argo CD has been installed:
+
+```bash
+kubectl apply -f argocd/log-output-application.yaml
+```
+
+The `Build and release Log Output` GitHub Actions workflow builds and pushes the three application images, then commits the immutable image tags to `log_output/kustomization.yaml`. Argo CD detects that commit and synchronizes the `exercises` namespace automatically. The workflow never runs `kubectl apply` or otherwise requires access to the cluster.
+
 ## Exercises
 
 Implemented:

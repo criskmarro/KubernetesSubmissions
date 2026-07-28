@@ -2,6 +2,9 @@ name: Deploy Project to GKE
 
 on:
   push:
+    paths:
+      - 'the_project/**'
+      - '.github/workflows/main.yaml'
    
 permissions:
   contents: read
