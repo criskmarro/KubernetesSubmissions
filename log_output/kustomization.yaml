@@ -7,3 +7,8 @@ resources:
   - manifests
   - postgres
   - ping-pong/manifests
+
+images:
+  - name: log-writer
+  - name: log-reader
+  - name: ping-pong

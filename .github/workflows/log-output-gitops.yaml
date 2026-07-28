@@ -1,0 +1,67 @@
+name: Build and publish Log Output
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'log_output/**'
+      - '.github/workflows/log-output-gitops.yaml'
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GAR_HOST: us-east1-docker.pkg.dev
+  GAR_REPOSITORY: kubernetes
+
+jobs:
+  build-publish:
+    name: Build, Publish, Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud --quiet auth configure-docker $GAR_HOST
+
+      - name: Build and publish images
+        run: |
+          docker build -t "$GAR_HOST/$PROJECT_ID/$GAR_REPOSITORY/log-writer:$GITHUB_SHA" ./log_output/writer
+          docker build -t "$GAR_HOST/$PROJECT_ID/$GAR_REPOSITORY/log-reader:$GITHUB_SHA" ./log_output/reader
+          docker build -t "$GAR_HOST/$PROJECT_ID/$GAR_REPOSITORY/ping-pong:$GITHUB_SHA" ./log_output/ping-pong
+
+          docker push "$GAR_HOST/$PROJECT_ID/$GAR_REPOSITORY/log-writer:$GITHUB_SHA"
+          docker push "$GAR_HOST/$PROJECT_ID/$GAR_REPOSITORY/log-reader:$GITHUB_SHA"
+          docker push "$GAR_HOST/$PROJECT_ID/$GAR_REPOSITORY/ping-pong:$GITHUB_SHA"
+
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Update Kustomize image tags
+        working-directory: ./log_output
+        run: |
+          kustomize edit set image log-writer=log-writer:$GITHUB_SHA
+          kustomize edit set image log-reader=log-reader:$GITHUB_SHA
+          kustomize edit set image ping-pong=ping-pong:$GITHUB_SHA
+
+      - name: Commit release configuration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add log_output/kustomization.yaml
+          git diff --cached --quiet || git commit -m "Release log output $GITHUB_SHA"
+          git push
