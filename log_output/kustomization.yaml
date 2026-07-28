@@ -4,11 +4,17 @@ kind: Kustomization
 namespace: exercises
 
 resources:
-  - manifests
-  - postgres
-  - ping-pong/manifests
+- manifests
+- postgres
+- ping-pong/manifests
 
 images:
-  - name: log-writer
-  - name: log-reader
-  - name: ping-pong
+- name: log-reader
+  newName: log-reader
+  newTag: d688b07012dd09094bd07af7597cc6a13de32637
+- name: log-writer
+  newName: log-writer
+  newTag: d688b07012dd09094bd07af7597cc6a13de32637
+- name: ping-pong
+  newName: ping-pong
+  newTag: d688b07012dd09094bd07af7597cc6a13de32637
