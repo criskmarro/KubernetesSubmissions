@@ -58,6 +58,13 @@
 - [4.7](https://github.com/criskmarro/KubernetesSubmissions/tree/4.7/log_output)
 - [4.8](https://github.com/criskmarro/KubernetesSubmissions/tree/4.8/the_project)
 
+## The project
+
+- [4.10 - Code](https://github.com/criskmarro/KubernetesSubmissions/tree/4.10/the_project)
+- [4.10 - Config](https://github.com/criskmarro/kubernetes-project-config)
+
+
+
 
 ---
 ## 3.9 DBaaS vs DIY
