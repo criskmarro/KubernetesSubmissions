@@ -248,6 +248,19 @@ kubectl top pods -n project
 
 ---
 
+## 4.10. The project, the grande finale
+
+This milestone completes the separation between the application code repository and the Kubernetes configuration repository.
+
+The workflow now keeps the code in the application repository, while the configuration repository stores the Kustomize files, manifests, and Argo CD application definition.
+
+This enables a clean GitOps flow where:
+
+- the application repository contains the source code and build workflow,
+- the configuration repository holds deployment definitions,
+- GitHub Actions updates the configuration repository,
+- Argo CD synchronizes the deployment from the configuration repository.
+
 # Health Checks
 
 The application implements Kubernetes health probes.
