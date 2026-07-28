@@ -115,7 +115,9 @@ Argo CD manages this application from the `main` branch. Apply the application d
 kubectl apply -f argocd/log-output-application.yaml
 ```
 
-The `Build and release Log Output` GitHub Actions workflow builds and pushes the three application images, then commits the immutable image tags to `log_output/kustomization.yaml`. Argo CD detects that commit and synchronizes the `exercises` namespace automatically. The workflow never runs `kubectl apply` or otherwise requires access to the cluster.
+Argo CD detects commits to the `main` branch and synchronizes the `log_output` manifests into the `exercises` namespace automatically. It does not need direct access from GitHub Actions to the local cluster.
+
+The workload uses `imagePullPolicy: Never`. Before a manifest change is synchronized, make the local images `log-writer`, `log-reader` and `ping-pong` available on every Kubernetes node.
 
 ## Exercises
 
