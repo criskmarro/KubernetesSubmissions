@@ -32,7 +32,7 @@ jobs:
           repository: criskmarro/kubernetes-project-config
           ref: main
           path: project-config
-          token: ${{ secrets.CONFIG_REPO_TOKEN }}
+          token: ${{ secrets.CONFIG_REPO_TOKEN || github.token }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
