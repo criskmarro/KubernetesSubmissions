@@ -12,7 +12,7 @@ Besides the traditional HTTP communication, the application also follows an even
 
 The application demonstrates production-oriented Kubernetes features including persistent storage, health probes, self-healing, messaging, scheduled jobs, resource management, continuous deployment, and canary deployments.
 
-The production deployment targets **Google Kubernetes Engine (GKE)** using **Gateway API**, **Kustomize**, **Google Artifact Registry**, and **GitHub Actions**.
+The production deployment targets **Google Kubernetes Engine (GKE)** using **Gateway API**, **Kustomize**, **Google Artifact Registry**, and **GitHub Actions**. Kubernetes configuration is maintained separately in the [kubernetes-project-config](https://github.com/criskmarro/kubernetes-project-config) repository and synchronized by Argo CD.
 
 ---
 

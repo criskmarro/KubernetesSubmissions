@@ -9,7 +9,7 @@ on:
       - '.github/workflows/project-gitops.yaml'
 
 permissions:
-  contents: write
+  contents: read
   id-token: write
 
 env:
@@ -25,6 +25,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Checkout configuration repository
+        uses: actions/checkout@v4
+        with:
+          repository: criskmarro/kubernetes-project-config
+          ref: main
+          token: ${{ secrets.CONFIG_REPO_TOKEN }}
+          path: project-config
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -56,7 +64,7 @@ jobs:
         uses: imranismail/setup-kustomize@v2
 
       - name: Update released image versions
-        working-directory: ./the_project
+        working-directory: ./project-config
         run: |
           kustomize edit set image todo-app=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-app:$GITHUB_SHA
           kustomize edit set image todo-backend=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-backend:$GITHUB_SHA
@@ -66,8 +74,8 @@ jobs:
 
       - name: Commit release configuration
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add the_project/kustomization.yaml
-          git diff --cached --quiet || git commit -m "Release the project $GITHUB_SHA"
-          git push
+          git -C project-config config user.name "github-actions[bot]"
+          git -C project-config config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C project-config add kustomization.yaml
+          git -C project-config diff --cached --quiet || git -C project-config commit -m "Release the project $GITHUB_SHA"
+          git -C project-config push

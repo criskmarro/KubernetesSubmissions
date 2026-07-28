@@ -25,3 +25,6 @@ logs
 .dockerignore
 
 key.json
+
+# Local clone of the separate Kubernetes configuration repository
+kubernetes-project-config/
