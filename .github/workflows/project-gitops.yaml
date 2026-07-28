@@ -9,7 +9,7 @@ on:
       - '.github/workflows/project-gitops.yaml'
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 env:
@@ -72,10 +72,24 @@ jobs:
           kustomize edit set image postgres-backup=$REGISTRY/$PROJECT_ID/$REPOSITORY/postgres-backup:$GITHUB_SHA
 
       - name: Commit release configuration
+        env:
+          CONFIG_REPO_TOKEN: ${{ secrets.CONFIG_REPO_TOKEN }}
         run: |
-          git -C project-config remote set-url origin "https://x-access-token:${{ secrets.CONFIG_REPO_TOKEN }}@github.com/criskmarro/kubernetes-project-config.git"
+          if [ -z "$CONFIG_REPO_TOKEN" ]; then
+            echo "CONFIG_REPO_TOKEN is not configured for this workflow." >&2
+            exit 1
+          fi
+
+          git -C project-config remote set-url origin "https://x-access-token:$CONFIG_REPO_TOKEN@github.com/criskmarro/kubernetes-project-config.git"
           git -C project-config config user.name "github-actions[bot]"
           git -C project-config config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C project-config fetch origin main
+          git -C project-config checkout -B main origin/main
           git -C project-config add kustomization.yaml
-          git -C project-config diff --cached --quiet || git -C project-config commit -m "Release the project $GITHUB_SHA"
-          git -C project-config push
+
+          if ! git -C project-config diff --cached --quiet; then
+            git -C project-config commit -m "Release the project $GITHUB_SHA"
+            git -C project-config push origin HEAD:main
+          else
+            echo "No configuration changes were detected; nothing to publish."
+          fi
