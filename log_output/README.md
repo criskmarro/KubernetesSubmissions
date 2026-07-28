@@ -130,3 +130,4 @@ Implemented:
 - **3.4 – Rewritten Routing**
 - **4.1 – Readiness Probe**
 - **4.7. Baby steps to GitOps**
+- **4.8. The project, step 24**
