@@ -33,6 +33,9 @@ jobs:
             exit 1
           fi
 
+          echo "CONFIG_REPO_TOKEN length: ${#CONFIG_REPO_TOKEN}"
+          echo "CONFIG_REPO_TOKEN prefix: ${CONFIG_REPO_TOKEN:0:8}"
+
       - name: Checkout configuration repository
         uses: actions/checkout@v4
         with:
