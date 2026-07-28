@@ -11,10 +11,10 @@ resources:
 images:
 - name: log-reader
   newName: log-reader
-  newTag: d688b07012dd09094bd07af7597cc6a13de32637
+  newTag: 51e80e14c8f9f02ed0c6ed24983dd521cd5edfd2
 - name: log-writer
   newName: log-writer
-  newTag: d688b07012dd09094bd07af7597cc6a13de32637
+  newTag: 51e80e14c8f9f02ed0c6ed24983dd521cd5edfd2
 - name: ping-pong
   newName: ping-pong
-  newTag: d688b07012dd09094bd07af7597cc6a13de32637
+  newTag: 51e80e14c8f9f02ed0c6ed24983dd521cd5edfd2
