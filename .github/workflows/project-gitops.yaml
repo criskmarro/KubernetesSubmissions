@@ -31,7 +31,6 @@ jobs:
         with:
           repository: criskmarro/kubernetes-project-config
           ref: main
-          token: ${{ secrets.CONFIG_REPO_TOKEN }}
           path: project-config
 
       - name: Authenticate to Google Cloud
@@ -74,6 +73,7 @@ jobs:
 
       - name: Commit release configuration
         run: |
+          git -C project-config remote set-url origin "https://x-access-token:${{ secrets.CONFIG_REPO_TOKEN }}@github.com/criskmarro/kubernetes-project-config.git"
           git -C project-config config user.name "github-actions[bot]"
           git -C project-config config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C project-config add kustomization.yaml
